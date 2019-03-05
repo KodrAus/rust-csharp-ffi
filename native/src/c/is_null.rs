@@ -31,13 +31,13 @@ impl<T: ?Sized> IsNull for *mut T {
 
 impl<T: ?Sized> IsNull for super::HandleOwned<T> {
     fn is_null(&self) -> bool {
-        self.0.is_null()
+        self.as_ptr().is_null()
     }
 }
 
 impl<T: ?Sized + Sync> IsNull for super::HandleShared<T> {
     fn is_null(&self) -> bool {
-        self.0.is_null()
+        self.as_ptr().is_null()
     }
 }
 

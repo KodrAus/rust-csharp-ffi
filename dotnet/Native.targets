@@ -55,11 +55,6 @@
         <CargoArtifactPath>$(MSBuildThisFileDirectory)/../native/target/$(CargoTarget)/$(Configuration)/$(CargoArtifact)</CargoArtifactPath>
     </PropertyGroup>
 
-    <ItemGroup>
-        <None Include="$(MSBuildThisFileDirectory)/../native/**/*.rs" />
-        <None Include="../native/**/*.toml" />
-    </ItemGroup>
-
     <Target Name="Cargo" BeforeTargets="Build">
         <Exec Command="cargo +$(CargoChannel) build --target $(CargoTarget) $(CargoFlags)" WorkingDirectory="$(MSBuildThisFileDirectory)/../native" Condition=" '$(CargoSkipBuild)' == 'false' " />
     </Target>

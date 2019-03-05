@@ -17,7 +17,7 @@ namespace Db.Storage
             {
                 fixed (void* p = pathUtf8)
                 {
-                    Bindings.db_store_open((IntPtr)p, (UIntPtr)(pathUtf8?.Length ?? 0), out var handle);
+                    Bindings.db_store_open((IntPtr) p, (UIntPtr) (pathUtf8?.Length ?? 0), out var handle);
 
                     return new Store
                     {

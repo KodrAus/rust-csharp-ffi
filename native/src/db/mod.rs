@@ -1,7 +1,6 @@
 use std::{
     panic::RefUnwindSafe,
     path::Path,
-    sync::Arc,
 };
 
 use crate::error::Error;
