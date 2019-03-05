@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!-- Whether or not we're using corert to link up a native binary -->
+    <PropertyGroup Condition=" '$(AotBuild)' == 'true' ">
+        <IsAotBuild>true</IsAotBuild>
+        <DefineConstants>$(DefineConstants);AOT</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(AotBuild)' != 'true' ">
+        <IsAotBuild>false</IsAotBuild>
+    </PropertyGroup>
+
+    <!-- Compile-time RIDs -->
+    <PropertyGroup Condition=" '$(NativeRid)' == 'win81-x64' Or ('$(NativeRid)' == '' And '$([MSBuild]::IsOsPlatform(`WINDOWS`))' == 'true') ">
+        <IsWindows>true</IsWindows>
+        <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(NativeRid)' == 'ubuntu.18.04-x64' Or '$(NativeRid)' == 'linux-x64' Or ('$(NativeRid)' == '' And '$([MSBuild]::IsOsPlatform(`LINUX`))' == 'true') ">
+        <IsLinux>true</IsLinux>
+        <IsUnix>true</IsUnix>
+        <DefineConstants>$(DefineConstants);LINUX;UNIX</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(NativeRid)' == 'osx-x64'  Or ('$(NativeRid)' == '' And '$([MSBuild]::IsOsPlatform(`OSX`))' == 'true') ">
+        <IsMacOS>true</IsMacOS>
+        <IsUnix>true</IsUnix>
+        <DefineConstants>$(DefineConstants);MACOS;UNIX</DefineConstants>
+    </PropertyGroup>
+
+    <!-- Cargo configuration -->
+    <PropertyGroup>
+        <CargoChannel>nightly</CargoChannel>
+        <CargoConfiguration>release</CargoConfiguration>
+        <CargoConfiguration Condition=" '$(Configuration)' == 'Debug' ">debug</CargoConfiguration>
+        <CargoFlags Condition=" '$(CargoConfiguration)' == 'release' ">--release</CargoFlags>
+        <CargoSkipBuild Condition=" '$(CargoSkipBuild)' == '' ">false</CargoSkipBuild>
+
+        <CargoTarget Condition=" '$(IsWindows)' == 'true' ">x86_64-pc-windows-msvc</CargoTarget>
+        <CargoTarget Condition=" '$(IsLinux)' == 'true' ">x86_64-unknown-linux-gnu</CargoTarget>
+        <CargoTarget Condition=" '$(IsMacOS)' == 'true' ">x86_64-apple-darwin</CargoTarget>
+
+        <CargoExtension Condition=" '$(IsWindows)' == 'true' ">dll</CargoExtension>
+        <CargoExtension Condition=" '$(IsLinux)' == 'true' ">so</CargoExtension>
+        <CargoExtension Condition=" '$(IsMacOS)' == 'true' ">dylib</CargoExtension>
+
+        <CargoExtension Condition=" '$(IsWindows)' == 'true' And '$(IsAotBuild)' == 'true' ">lib</CargoExtension>
+        <CargoExtension Condition=" '$(IsLinux)' == 'true' And '$(IsAotBuild)' == 'true' ">a</CargoExtension>
+        <CargoExtension Condition=" '$(IsMacOS)' == 'true' And '$(IsAotBuild)' == 'true' ">a</CargoExtension>
+
+        <CargoArtifact Condition=" '$(IsWindows)' == 'true' ">db.$(CargoExtension)</CargoArtifact>
+        <CargoArtifact Condition=" '$(IsLinux)' == 'true' ">libdb.$(CargoExtension)</CargoArtifact>
+        <CargoArtifact Condition=" '$(IsMacOS)' == 'true' ">libdb.$(CargoExtension)</CargoArtifact>
+
+        <CargoArtifactPath>$(MSBuildThisFileDirectory)/../native/target/$(CargoTarget)/$(Configuration)/$(CargoArtifact)</CargoArtifactPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="$(MSBuildThisFileDirectory)/../native/**/*.rs" />
+        <None Include="../native/**/*.toml" />
+    </ItemGroup>
+
+    <Target Name="Cargo" BeforeTargets="Build">
+        <Exec Command="cargo +$(CargoChannel) build --target $(CargoTarget) $(CargoFlags)" WorkingDirectory="$(MSBuildThisFileDirectory)/../native" Condition=" '$(CargoSkipBuild)' == 'false' " />
+    </Target>
+
+    <!-- In AOT builds, add a reference to the IL compiler and link the static native artifact -->
+    <ItemGroup Condition=" '$(IsAotBuild)' == 'true' ">
+        <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-*" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(IsAotBuild)' == 'true' ">
+        <NativeLibrary Include="$(CargoArtifactPath)" />
+    </ItemGroup>
+
+    <!-- In standard builds, copy the native dynamic artifact to the output dir  -->
+    <ItemGroup Condition=" '$(IsAotBuild)' == 'false' ">
+        <CargoLibrary Include="$(CargoArtifactPath)" />
+    </ItemGroup>
+
+    <Target Name="CargoBuildCopy" DependsOnTargets="Cargo" AfterTargets="Build" Condition=" '$(IsAotBuild)' == 'false' ">
+        <Copy Condition=" '$(TargetDir)' != '' " SourceFiles="@(CargoLibrary)" DestinationFolder="$(TargetDir)/Native" />
+    </Target>
+
+    <Target Name="CargoPublishCopy" AfterTargets="Publish" Condition=" '$(IsAotBuild)' == 'false' ">
+        <Copy SourceFiles="@(CargoLibrary)" DestinationFolder="$(PublishDir)/Native" />
+    </Target>
+</Project>
