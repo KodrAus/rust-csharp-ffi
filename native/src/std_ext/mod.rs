@@ -1,3 +1,7 @@
+/*!
+Standard library extensions.
+*/
+
 #[cfg(test)]
 #[macro_use]
 pub(crate) mod test;

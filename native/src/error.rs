@@ -9,6 +9,9 @@ use failure::{
     Fail,
 };
 
+/**
+An error encountered while working with a database.
+*/
 #[derive(Debug, Fail)]
 #[fail(display = "error using a db")]
 pub struct Error(#[cause] failure::Error);

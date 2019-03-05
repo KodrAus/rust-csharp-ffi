@@ -11,10 +11,20 @@ use std::{
 
 use super::thread_bound::ThreadBound;
 
+/*
+The handles here are wrappers for a shared `&T` and an exclusive `&mut T`.
+
+They protect from data races, but don't protect from use-after-free bugs.
+The caller is expected to maintain that invariant, which in .NET can be
+achieved using `SafeHandle`s.
+*/
+
 /**
 A shared handle that can be accessed concurrently by multiple threads.
 
 The interior value can be treated like `&T`.
+
+Consumers must ensure a handle is not used again after it has been deallocated.
 */
 #[repr(transparent)]
 pub struct HandleShared<T: ?Sized>(*const T);
@@ -46,8 +56,9 @@ impl<T: Send + Sync> HandleShared<T> {
 
 /*
 We require thread-safety bounds on `Deref` even though they're
-not _technically_ needed here so we can catch ourselves using
-data in the handles that doesn't satisfy their safety requirements
+not _technically_ needed here (the `alloc` method protects us)
+so we can catch ourselves using data in the handles that doesn't
+satisfy their safety requirements
 */
 impl<T: ?Sized + Send + Sync> Deref for HandleShared<T> {
     type Target = T;
@@ -60,8 +71,16 @@ impl<T: ?Sized + Send + Sync> Deref for HandleShared<T> {
 /**
 A non-shared handle that cannot be accessed by multiple threads.
 
-The handle is bound to the thread that it was created on.
 The interior value can be treated like `&mut T`.
+
+The handle is bound to the thread that it was created on to ensure
+there's no possibility for data races. Note that this doesn't rule out
+the possibility of multiple live mutable aliases to the same handle, even
+though memory accesses must be safe.
+
+The handle can be deallocated from a different thread than the one that created it.
+
+Consumers must ensure a handle is not used again after it has been deallocated.
 */
 #[repr(transparent)]
 pub struct HandleOwned<T: ?Sized>(*mut ThreadBound<T>);
@@ -93,8 +112,9 @@ impl<T: Send> HandleOwned<T> {
 
 /*
 We require thread-safety bounds on `Deref` even though they're
-not _technically_ needed here so we can catch ourselves using
-data in the handles that doesn't satisfy their safety requirements
+not _technically_ needed here (the `alloc` method protects us)
+so we can catch ourselves using data in the handles that doesn't
+satisfy their safety requirements
 */
 impl<T: ?Sized + Send> Deref for HandleOwned<T> {
     type Target = T;
@@ -106,8 +126,9 @@ impl<T: ?Sized + Send> Deref for HandleOwned<T> {
 
 /*
 We require thread-safety bounds on `Deref` even though they're
-not _technically_ needed here so we can catch ourselves using
-data in the handles that doesn't satisfy their safety requirements
+not _technically_ needed here (the `alloc` method protects us)
+so we can catch ourselves using data in the handles that doesn't
+satisfy their safety requirements
 */
 impl<T: ?Sized + Send> DerefMut for HandleOwned<T> {
     fn deref_mut(&mut self) -> &mut T {
@@ -115,4 +136,7 @@ impl<T: ?Sized + Send> DerefMut for HandleOwned<T> {
     }
 }
 
+/**
+A parameter that will have a value assigned during the FFI call.
+*/
 pub type Out<T> = *mut T;

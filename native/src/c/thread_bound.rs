@@ -11,15 +11,15 @@ use std::{
 
 type ThreadId = usize;
 
-static mut COUNTER: AtomicUsize = AtomicUsize::new(0);
+static mut GLOBAL_ID: AtomicUsize = AtomicUsize::new(0);
 thread_local!(static THREAD_ID: usize = next_thread_id());
 
 fn next_thread_id() -> usize {
-    unsafe { COUNTER.fetch_add(1, Ordering::SeqCst) }
+    unsafe { GLOBAL_ID.fetch_add(1, Ordering::SeqCst) }
 }
 
 fn get_thread_id() -> usize {
-    THREAD_ID.with(|&x| x)
+    THREAD_ID.with(|x| *x)
 }
 
 pub(super) struct ThreadBound<T: ?Sized> {
@@ -36,9 +36,11 @@ impl<T> ThreadBound<T> {
     }
 }
 
-// We don't need to check the thread id when moving out of the inner
-// value so long as the inner value is itself `Send`. This allows
-// the .NET runtime to potentially finalize a value on another thread.
+/*
+We don't need to check the thread id when moving out of the inner
+value so long as the inner value is itself `Send`. This allows
+the .NET runtime to potentially finalize a value on another thread.
+*/
 impl<T: Send> ThreadBound<T> {
     pub fn into_inner(self) -> T {
         self.inner

@@ -1,5 +1,8 @@
 use std::{
-    panic::RefUnwindSafe,
+    panic::{
+        UnwindSafe,
+        RefUnwindSafe,
+    },
     path::Path,
 };
 
@@ -9,6 +12,7 @@ struct Inner {
     db: sled::Db,
 }
 
+impl UnwindSafe for Inner {}
 impl RefUnwindSafe for Inner {}
 
 /**

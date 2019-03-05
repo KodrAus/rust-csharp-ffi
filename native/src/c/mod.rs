@@ -1,5 +1,5 @@
 /*!
-A C interface to a database.
+C interface to the database.
 */
 
 // Almost everything here is going to be unsafe
@@ -39,45 +39,35 @@ pub struct DbStore {
 
 pub type DbStoreHandle = HandleShared<DbStore>;
 
-// The last result function isn't part of the FFI macro because it doesn't set its own last error
-#[no_mangle]
-pub unsafe extern "C" fn db_last_result(
-    message_buf: *mut u8,
-    message_buf_len: size_t,
-    actual_message_len: Out<size_t>,
-    result: Out<DbResult>,
-) -> DbResult {
-    // Any arguments added to the `db_last_result` function
-    // need to be checked for null here
-    if message_buf.is_null()
-        || message_buf_len.is_null()
-        || actual_message_len.is_null()
-        || result.is_null()
-    {
-        return DbResult::ArgumentNull;
-    }
+ffi_no_catch! {
+    fn db_last_result(
+        message_buf: *mut u8,
+        message_buf_len: size_t,
+        actual_message_len: Out<size_t>,
+        result: Out<DbResult>
+    ) -> DbResult {
+        DbResult::with_last_result(|last_result| {
+            let (value, error) = last_result.unwrap_or((DbResult::Ok, None));
 
-    DbResult::with_last_result(|last_result| {
-        let (value, error) = last_result.unwrap_or((DbResult::Ok, None));
+            *result = value;
 
-        *result = value;
+            if let Some(error) = error {
+                let message = slice::from_raw_parts_mut(message_buf, message_buf_len);
 
-        if let Some(error) = error {
-            let message = slice::from_raw_parts_mut(message_buf, message_buf_len);
+                *actual_message_len = error.len();
 
-            *actual_message_len = error.len();
+                if message.len() < error.len() {
+                    return DbResult::BufferTooSmall;
+                }
 
-            if message.len() < error.len() {
-                return DbResult::BufferTooSmall;
+                (&mut message[0..error.len()]).copy_from_slice(error.as_bytes());
+            } else {
+                *actual_message_len = 0;
             }
 
-            (&mut message[0..error.len()]).copy_from_slice(error.as_bytes());
-        } else {
-            *actual_message_len = 0;
-        }
-
-        DbResult::Ok
-    })
+            DbResult::Ok
+        })
+    }
 }
 
 ffi! {
