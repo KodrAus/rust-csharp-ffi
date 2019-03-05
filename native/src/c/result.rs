@@ -12,7 +12,7 @@ use std::{
 use failure::Fail;
 
 use crate::{
-    error,
+    error::Error,
     std_ext::prelude::*,
 };
 
@@ -111,7 +111,7 @@ impl DbResult {
 /**
 Map error types that are convertible into `Error` into `DbResult`s.
 
-This is so we can use `?` on `Result<T, E: Into<error::Error>>` in FFI functions.
+This is so we can use `?` on `Result<T, E: Fail>` in FFI functions.
 The error state will be serialized and stored in a thread-local that can be queried later.
 */
 impl<E> From<E> for DbResult
@@ -120,7 +120,7 @@ where
 {
     fn from(e: E) -> Self {
         let err = Some(format_error(&e));
-        let db_result = error::Error::from_fail(e).into_db_result();
+        let db_result = Error::fail(e).into_db_result();
 
         LAST_RESULT.with(|last_result| {
             *last_result.borrow_mut() = Some(LastResult {
@@ -170,7 +170,7 @@ impl Try for DbResult {
     }
 }
 
-impl error::Error {
+impl Error {
     fn into_db_result(self) -> DbResult {
         DbResult::InternalError
     }
@@ -232,9 +232,9 @@ mod tests {
         Variant(#[cause] TestInnerError),
     }
 
-    impl From<TestError> for error::Error {
-        fn from(err: TestError) -> error::Error {
-            error::Error::from_fail(err)
+    impl From<TestError> for Error {
+        fn from(err: TestError) -> Error {
+            Error::fail(err)
         }
     }
 

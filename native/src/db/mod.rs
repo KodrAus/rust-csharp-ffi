@@ -23,7 +23,7 @@ impl Db {
     Create or open a store at the given location.
     */
     pub fn open(path: impl AsRef<Path>) -> Result<Self, Error> {
-        let db = sled::Db::start_default(path).map_err(Error::from_fail)?;
+        let db = sled::Db::start_default(path).map_err(Error::fail)?;
 
         Ok(Db {
             inner: Inner { db },
@@ -34,7 +34,7 @@ impl Db {
     Close a store.
     */
     pub fn close(self) -> Result<(), Error> {
-        self.inner.db.flush().map_err(Error::from_fail)?;
+        self.inner.db.flush().map_err(Error::fail)?;
 
         Ok(())
     }

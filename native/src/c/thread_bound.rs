@@ -34,9 +34,13 @@ impl<T> ThreadBound<T> {
             inner,
         }
     }
+}
 
+// We don't need to check the thread id when moving out of the inner
+// value so long as the inner value is itself `Send`. This allows
+// the .NET runtime to potentially finalize a value on another thread.
+impl<T: Send> ThreadBound<T> {
     pub fn into_inner(self) -> T {
-        self.check_id();
         self.inner
     }
 }

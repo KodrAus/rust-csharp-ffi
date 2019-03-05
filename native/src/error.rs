@@ -14,11 +14,11 @@ use failure::{
 pub struct Error(#[cause] failure::Error);
 
 impl Error {
-    pub(crate) fn from_fail(err: impl Fail) -> Self {
+    pub(crate) fn fail(err: impl Fail) -> Self {
         Error(err.into())
     }
 
     pub(crate) fn msg(msg: impl Display + Debug + Sync + Send + 'static) -> Self {
-        Error::from_fail(err_msg(msg).compat())
+        Error::fail(err_msg(msg).compat())
     }
 }
