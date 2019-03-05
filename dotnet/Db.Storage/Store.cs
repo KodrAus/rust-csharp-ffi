@@ -4,7 +4,7 @@ using Db.Storage.Native;
 
 namespace Db.Storage
 {
-    public class Store : IDisposable
+    public sealed class Store : IDisposable
     {
         StoreHandle _handle;
 
