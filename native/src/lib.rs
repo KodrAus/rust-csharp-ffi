@@ -7,6 +7,6 @@ mod macros;
 #[macro_use]
 mod std_ext;
 
-pub mod error;
-pub mod db;
 pub mod c;
+pub mod db;
+pub mod error;

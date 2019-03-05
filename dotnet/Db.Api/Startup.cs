@@ -28,7 +28,7 @@ namespace Db.Api
             applicationPartManager.ApplicationParts.Add(new AssemblyPart(typeof(Startup).Assembly));
             services.Add(new ServiceDescriptor(typeof(ApplicationPartManager), applicationPartManager));
 
-            services.AddSingleton<Store>(Store.Open());
+            services.AddSingleton<Store>(Store.Open("./data"));
 
             services.AddMvcCore().AddJsonFormatters();
         }

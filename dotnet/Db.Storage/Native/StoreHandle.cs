@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 
@@ -10,7 +11,7 @@ namespace Db.Storage.Native
             : base(IntPtr.Zero, true)
         {
         }
-       
+
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {

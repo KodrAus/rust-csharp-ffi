@@ -15,21 +15,25 @@ use std::{
         UnwindSafe,
     },
     slice,
+    str,
 };
 
 use libc::size_t;
 
-use self::{
-    is_null::IsNull,
-    thread_bound::ThreadBound,
+use crate::{
+    c::{
+        is_null::IsNull,
+        thread_bound::ThreadBound,
+    },
+    db,
 };
 
 #[macro_use]
 mod macros;
 
-mod thread_bound;
 mod is_null;
 mod result;
+mod thread_bound;
 
 pub use self::result::*;
 
@@ -52,11 +56,11 @@ impl<T: Send + Sync + 'static> HandleShared<T> {
     }
 }
 
-impl<T: ?Sized + Send + Sync> HandleShared<T> {
+impl<T: Send + Sync> HandleShared<T> {
     unsafe_fn!("There are no other live references and the handle won't be used again" =>
-        fn dealloc<R>(handle: Self, f: impl FnOnce(&mut T) -> R) -> R {
+        fn dealloc<R>(handle: Self, f: impl FnOnce(T) -> R) -> R {
             let mut v = Box::from_raw(handle.0 as *mut T);
-            f(&mut *v)
+            f(*v)
         });
 }
 
@@ -93,11 +97,11 @@ impl<T: Send + 'static> HandleOwned<T> {
     }
 }
 
-impl<T: ?Sized + Send> HandleOwned<T> {
+impl<T: Send> HandleOwned<T> {
     unsafe_fn!("There are no other live references and the handle won't be used again" =>
-        fn dealloc<R>(handle: Self, f: impl FnOnce(&mut T) -> R) -> R {
-            let mut v = Box::from_raw(handle.0);
-            f(&mut **v)
+        fn dealloc<R>(handle: Self, f: impl FnOnce(T) -> R) -> R {
+            let v = Box::from_raw(handle.0);
+            f(v.into_inner())
         });
 }
 
@@ -129,7 +133,7 @@ pub type Out<T> = *mut T;
 
 #[repr(C)]
 pub struct DbStore {
-
+    inner: db::Db,
 }
 
 pub type DbStoreHandle = HandleShared<DbStore>;
@@ -176,14 +180,21 @@ pub unsafe extern "C" fn db_last_result(
 }
 
 ffi! {
-    fn db_store_open(store: Out<DbStoreHandle>) -> DbResult {
-        *store = DbStoreHandle::alloc(DbStore { });
+    fn db_store_open(path: *const u8, path_len: size_t, store: Out<DbStoreHandle>) -> DbResult {
+        let path_slice = slice::from_raw_parts(path, path_len);
+        let path = str::from_utf8(path_slice)?;
+
+        *store = DbStoreHandle::alloc(DbStore {
+            inner: db::Db::open(path)?,
+        });
 
         DbResult::Ok
     }
 
     fn db_store_close(store: DbStoreHandle) -> DbResult {
-        DbStoreHandle::dealloc(store, |s| {
+        DbStoreHandle::dealloc(store, |store| {
+            store.inner.close()?;
+
             DbResult::Ok
         })
     }

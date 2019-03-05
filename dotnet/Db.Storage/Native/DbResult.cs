@@ -24,9 +24,9 @@ namespace Db.Storage.Native
             return LastResult.GetLastResult();
         }
 
-        public void EnsureSuccess()
+        internal DbResult Check()
         {
-            if (IsSuccess()) return;
+            if (IsSuccess() || IsBufferTooSmall()) return this;
             
             var (lastResult, msg) = GetLastResult();
 

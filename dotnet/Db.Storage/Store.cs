@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using Db.Storage.Native;
 
 namespace Db.Storage
@@ -7,14 +8,23 @@ namespace Db.Storage
     {
         StoreHandle _handle;
 
-        public static Store Open()
+        public static Store Open(string path)
         {
-            Bindings.db_store_open(out var handle).EnsureSuccess();
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            var pathUtf8 = Encoding.UTF8.GetBytes(path);
 
-            return new Store
+            unsafe
             {
-                _handle = handle
-            };
+                fixed (void* p = pathUtf8)
+                {
+                    Bindings.db_store_open((IntPtr)p, (UIntPtr)(pathUtf8?.Length ?? 0), out var handle);
+
+                    return new Store
+                    {
+                        _handle = handle
+                    };
+                }
+            }
         }
 
         public bool IsOpen => !_handle.IsClosed;

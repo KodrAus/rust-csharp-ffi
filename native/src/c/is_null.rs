@@ -41,18 +41,4 @@ impl<T: ?Sized + Sync> IsNull for super::HandleShared<T> {
     }
 }
 
-never_null!(
-    usize,
-    isize,
-    u8,
-    u16,
-    u32,
-    u64,
-    u128,
-    i8,
-    i16,
-    i32,
-    i64,
-    i128,
-    bool
-);
+never_null!(usize, isize, u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, bool);

@@ -25,7 +25,6 @@ namespace Db.Storage.Native
                     return FillLastResult(new Span<byte>(new byte[(int)actualMessageLen]));
                 }
 
-                result.EnsureSuccess();
                 return (lastResult, Encoding.UTF8.GetString(messageBufPtr, (int)actualMessageLen));
             }
         }

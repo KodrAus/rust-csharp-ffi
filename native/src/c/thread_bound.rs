@@ -3,7 +3,10 @@ use std::{
         Deref,
         DerefMut,
     },
-    sync::atomic::{AtomicUsize, Ordering},
+    sync::atomic::{
+        AtomicUsize,
+        Ordering,
+    },
 };
 
 type ThreadId = usize;
@@ -30,6 +33,11 @@ impl<T> ThreadBound<T> {
             thread_id: get_thread_id(),
             inner,
         }
+    }
+
+    pub fn into_inner(self) -> T {
+        self.check_id();
+        self.inner
     }
 }
 

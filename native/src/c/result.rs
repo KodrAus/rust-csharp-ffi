@@ -1,7 +1,7 @@
 use std::{
     any::Any,
-    fmt::Write,
     cell::RefCell,
+    fmt::Write,
     ops::Try,
     panic::{
         catch_unwind,
@@ -116,11 +116,11 @@ The error state will be serialized and stored in a thread-local that can be quer
 */
 impl<E> From<E> for DbResult
 where
-    E: Into<error::Error> + Fail,
+    E: Fail,
 {
     fn from(e: E) -> Self {
         let err = Some(format_error(&e));
-        let db_result = e.into().into_db_result();
+        let db_result = error::Error::from_fail(e).into_db_result();
 
         LAST_RESULT.with(|last_result| {
             *last_result.borrow_mut() = Some(LastResult {
@@ -184,7 +184,8 @@ struct LastResult {
 fn format_error(err: &dyn Fail) -> String {
     let mut error_string = String::new();
 
-    let mut causes = err.iter_causes();
+    let mut causes = Some(err).into_iter().chain(err.iter_causes());
+
     if let Some(cause) = causes.next() {
         let _ = writeln!(error_string, "{}.", cause);
     }
