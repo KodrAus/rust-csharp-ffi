@@ -18,18 +18,18 @@ impl RefUnwindSafe for Inner {}
 /**
 A database instance.
 */
-pub struct Db {
+pub struct Store {
     inner: Inner,
 }
 
-impl Db {
+impl Store {
     /**
     Create or open a store at the given location.
     */
     pub fn open(path: impl AsRef<Path>) -> Result<Self, Error> {
         let db = sled::Db::start_default(path).map_err(Error::fail)?;
 
-        Ok(Db {
+        Ok(Store {
             inner: Inner { db },
         })
     }

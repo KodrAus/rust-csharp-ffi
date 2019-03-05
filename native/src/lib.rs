@@ -10,5 +10,5 @@ mod macros;
 mod std_ext;
 
 pub mod c;
-pub mod db;
+pub mod store;
 pub mod error;

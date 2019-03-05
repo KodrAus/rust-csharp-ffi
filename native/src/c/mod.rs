@@ -12,12 +12,7 @@ use std::{
 
 use libc::size_t;
 
-use crate::{
-    c::{
-        is_null::IsNull,
-    },
-    db,
-};
+use crate::store;
 
 #[macro_use]
 mod macros;
@@ -34,7 +29,7 @@ pub use self::{
 
 #[repr(C)]
 pub struct DbStore {
-    inner: db::Db,
+    inner: store::Store,
 }
 
 pub type DbStoreHandle = HandleShared<DbStore>;
@@ -76,7 +71,7 @@ ffi! {
         let path = str::from_utf8(path_slice)?;
 
         *store = DbStoreHandle::alloc(DbStore {
-            inner: db::Db::open(path)?,
+            inner: store::Store::open(path)?,
         });
 
         DbResult::Ok
