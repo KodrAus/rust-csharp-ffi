@@ -23,12 +23,11 @@ namespace Db.Storage
                 var key = default(DbKey);
 
                 // This is safe because the key lives in this stack local
-                var keyPtr = Unsafe.AsPointer(ref key);
-                var written = Encoder.GetBytes(hi.AsSpan(), new Span<byte>(keyPtr, 8), true);
+                var written = Encoder.GetBytes(hi.AsSpan(), new Span<byte>(key._data, 8), true);
                 if (written != 8)
                     throw new ArgumentException("The hi string must contain exactly 8 ASCII chars", nameof(hi));
 
-                key.lo = lo;
+                Unsafe.WriteUnaligned(Unsafe.Add<ulong>(key._data, 1), lo);
 
                 _key = key;
             }
@@ -37,6 +36,7 @@ namespace Db.Storage
         public static Key FromString(string key)
         {
             if (key.Length < 10) throw new ArgumentException("The key is too short", nameof(key));
+            if (key[8] != '-') throw new Exception("The key is in an invalid format");
 
             var hi = key.Substring(0, 8);
             var lo = Convert.ToUInt64(key.Substring(9));
@@ -55,19 +55,18 @@ namespace Db.Storage
 
         public void Deconstruct(out string hi, out ulong lo)
         {
+            var local = _key;
+
             unsafe
             {
-                // This is safe because the value lives in this stack local
-                var rawHi = _key.hi;
-                hi = Encoding.ASCII.GetString((byte*) Unsafe.AsPointer(ref rawHi), 8);
-                
-                lo = _key.lo;
+                hi = Encoding.ASCII.GetString(local._data, 8);
+                lo = Unsafe.ReadUnaligned<ulong>(Unsafe.Add<ulong>(local._data, 1));
             }
         }
 
         public static bool operator ==(Key lhs, Key rhs)
         {
-            return lhs._key.hi == rhs._key.hi && lhs._key.lo == rhs._key.lo;
+            return lhs.Equals(rhs);
         }
 
         public static bool operator !=(Key lhs, Key rhs)
@@ -77,7 +76,15 @@ namespace Db.Storage
 
         public bool Equals(Key other)
         {
-            return _key.Equals(other._key);
+            var local = this;
+            
+            unsafe
+            {
+                var thisSpan = new Span<byte>(local._key._data, 16);
+                var otherSpan = new Span<byte>(other._key._data, 16);
+
+                return thisSpan.SequenceEqual(otherSpan);
+            }
         }
 
         public override bool Equals(object obj)
@@ -88,7 +95,15 @@ namespace Db.Storage
 
         public override int GetHashCode()
         {
-            return _key.GetHashCode();
+            var local = this;
+
+            unsafe
+            {
+                var hi = Unsafe.ReadUnaligned<ulong>(local._key._data);
+                var lo = Unsafe.ReadUnaligned<ulong>(Unsafe.Add<ulong>(local._key._data, 1));
+                
+                return (hi.GetHashCode() * 397) ^ lo.GetHashCode();
+            }
         }
     }
 }
