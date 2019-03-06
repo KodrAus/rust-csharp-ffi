@@ -6,8 +6,15 @@ namespace Db.Storage
 {
     public sealed class Store : IDisposable
     {
-        string _path;
-        StoreHandle _handle;
+        private StoreHandle _handle;
+        private string _path;
+
+        public bool IsOpen => !_handle.IsClosed;
+
+        public void Dispose()
+        {
+            _handle.Close();
+        }
 
         public static Store Open(string path)
         {
@@ -32,21 +39,25 @@ namespace Db.Storage
         public Reader BeginRead()
         {
             EnsureOpen();
-            
+
             Bindings.db_read_begin(_handle, out var readerHandle);
             return new Reader(readerHandle);
         }
 
-        public bool IsOpen => !_handle.IsClosed;
+        public Writer BeginWrite()
+        {
+            EnsureOpen();
+
+            Bindings.db_write_begin(_handle, out var writerHandle);
+            return new Writer(writerHandle);
+        }
 
         public void Close()
         {
             Dispose();
         }
 
-        public void Dispose() => _handle.Close();
-
-        void EnsureOpen()
+        private void EnsureOpen()
         {
             if (_handle.IsClosed)
                 throw new ObjectDisposedException(nameof(Store), $"The store at `{_path}` has been disposed.");

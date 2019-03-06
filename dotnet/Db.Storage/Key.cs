@@ -1,15 +1,20 @@
 using System;
-using System.Text;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Db.Storage.Native;
 
 namespace Db.Storage
 {
     public struct Key
     {
-        static readonly Encoder _encoder = Encoding.ASCII.GetEncoder();
+        private static readonly Encoder Encoder = Encoding.ASCII.GetEncoder();
 
-        DbKey _key;
+        private DbKey _key;
+        
+        internal Key(DbKey key)
+        {
+            _key = key;
+        }
 
         public Key(string hi, ulong lo)
         {
@@ -17,36 +22,69 @@ namespace Db.Storage
             {
                 var key = default(DbKey);
 
-                var hiPtr = Unsafe.AsPointer(ref key);
-                var loPtr = Unsafe.Add<byte>(hiPtr, 8);
-
-                var written = _encoder.GetBytes(hi.AsSpan(), new Span<byte>(hiPtr, 8), true);
+                var written = Encoder.GetBytes(hi.AsSpan(), new Span<byte>(Unsafe.AsPointer(ref key), 8), true);
                 if (written != 8)
-                {
                     throw new ArgumentException("The hi string must contain exactly 8 ASCII chars", nameof(hi));
-                }
-                
-                Unsafe.Write(loPtr, lo);
-                
+
+                key.lo = lo;
+
                 _key = key;
             }
         }
 
-        internal Key(DbKey key)
+        public static Key FromString(string key)
         {
-            _key = key;
+            if (key.Length < 10)
+            {
+                throw new ArgumentException("The key is too short", nameof(key));
+            }
+            
+            var hi = key.Substring(0, 8);
+            var lo = Convert.ToUInt64(key.Substring(9));
+
+            return new Key(hi, lo);
+        }
+
+        public override string ToString()
+        {
+            var (hi, lo) = this;
+            
+            return $"{hi}-{lo}";
         }
 
         public void Deconstruct(out string hi, out ulong lo)
         {
             unsafe
             {
-                var hiPtr = Unsafe.AsPointer(ref this);
-                var loPtr = Unsafe.Add<byte>(hiPtr, 8);
-
-                hi = Encoding.ASCII.GetString((byte*)hiPtr, 8);
-                lo = Unsafe.Read<ulong>(loPtr);
+                hi = Encoding.ASCII.GetString((byte*) Unsafe.AsPointer(ref _key), 8);
+                lo = _key.lo;
             }
+        }
+
+        public static bool operator ==(Key lhs, Key rhs)
+        {
+            return lhs._key.hi == rhs._key.hi && lhs._key.lo == rhs._key.lo;
+        }
+
+        public static bool operator !=(Key lhs, Key rhs)
+        {
+            return !(lhs == rhs);
+        }
+
+        public bool Equals(Key other)
+        {
+            return _key.Equals(other._key);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            return obj is Key other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return _key.GetHashCode();
         }
     }
 }

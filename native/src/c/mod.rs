@@ -9,7 +9,10 @@ use std::{
 
 use libc::size_t;
 
-use crate::store;
+use crate::{
+    store,
+    data::{self, Data},
+};
 
 #[macro_use]
 mod macros;
@@ -25,7 +28,8 @@ pub use self::{
     result::*,
 };
 
-pub type DbKey = [u8; 16];
+#[repr(transparent)]
+pub struct DbKey([u8; 16]);
 
 #[repr(C)]
 pub struct DbStore {
@@ -36,15 +40,17 @@ pub type DbStoreHandle = HandleShared<DbStore>;
 
 #[repr(C)]
 pub struct DbReader {
-    // NOTE: The reader contains thread-local data.
-    // This means it's not safe to drop on its own
-    // from a finalization thread if the resource
-    // isn't explicitly disposed sooner. We use a `DeferredCleanup`
-    // here to defer cleanup until the original thread can do it.
     inner: thread_bound::DeferredCleanup<store::reader::Reader>,
 }
 
 pub type DbReaderHandle = HandleOwned<DbReader>;
+
+#[repr(C)]
+pub struct DbWriter {
+    inner: thread_bound::DeferredCleanup<store::writer::Writer>,
+}
+
+pub type DbWriterHandle = HandleOwned<DbWriter>;
 
 ffi_no_catch! {
     fn db_last_result(
@@ -126,13 +132,9 @@ ffi! {
                 // If the result is ok then we're done with this event
                 // Fetch the next one
                 Some(DbResult::Ok) => {
-                    let mut has_next = reader.inner.move_next()?;
+                    reader.inner.move_next()?;
 
-                    if has_next {
-                        return DbResult::Ok;
-                    } else {
-                        return DbResult::Done;
-                    }
+                    return DbResult::Ok;
                 },
                 // If the result is anything but `Ok` then return.
                 // This probably means the caller-supplied buffer was
@@ -156,6 +158,43 @@ ffi! {
     fn db_read_end(reader: DbReaderHandle) -> DbResult {
         DbReaderHandle::dealloc(reader, |mut reader| {
             reader.inner.complete()?;
+
+            DbResult::Ok
+        })
+    }
+
+    fn db_write_begin(
+        store: DbStoreHandle,
+        writer: Out<DbWriterHandle>
+    ) -> DbResult {
+        *writer = DbWriterHandle::alloc(DbWriter {
+            inner: thread_bound::DeferredCleanup::new(store.inner.begin_write()?),
+        });
+
+        DbResult::Ok
+    }
+
+    fn db_write_set(
+        writer: DbWriterHandle,
+        key: DbKey,
+        value: *const u8,
+        value_len: size_t
+    ) -> DbResult {
+        let value_slice = slice::from_raw_parts(value, value_len);
+
+        let data = Data {
+            key: data::Key::from_bytes(key.0),
+            payload: value_slice,
+        };
+        
+        writer.inner.set(data)?;
+
+        DbResult::Ok
+    }
+
+    fn db_write_end(writer: DbWriterHandle) -> DbResult {
+        DbWriterHandle::dealloc(writer, |mut writer| {
+            writer.inner.complete()?;
 
             DbResult::Ok
         })

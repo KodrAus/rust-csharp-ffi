@@ -11,6 +11,10 @@ pub const KEY_SIZE: usize = 16;
 pub struct Key([u8; KEY_SIZE]);
 
 impl Key {
+    pub(crate) fn from_bytes(value: [u8; 16]) -> Self {
+        Key(value)
+    }
+
     pub(crate) fn from_vec(value: Vec<u8>) -> Result<Self, Error> {
         Self::from_slice(&value)
     }
@@ -32,5 +36,11 @@ impl Key {
 
     pub(crate) fn to_bytes(self) -> [u8; KEY_SIZE] {
         self.0
+    }
+}
+
+impl AsRef<[u8]> for Key {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
     }
 }

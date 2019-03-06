@@ -4,12 +4,12 @@ namespace Db.Storage
 {
     public ref struct ReadResult
     {
-        Key _key;
-        Span<byte> _value;
-        int _requiredLength;
-        Result _result;
+        private Key _key;
+        private Span<byte> _value;
+        private int _requiredLength;
+        private Result _result;
 
-        enum Result
+        private enum Result
         {
             Ok,
             Done,
@@ -50,7 +50,7 @@ namespace Db.Storage
                 required = 0;
                 return false;
             }
-            
+
             required = _requiredLength;
             return true;
         }

@@ -10,6 +10,7 @@ use std::{
 use crate::error::Error;
 
 pub mod reader;
+pub mod writer;
 
 #[derive(Clone)]
 struct Inner {
@@ -27,9 +28,6 @@ pub struct Store {
 }
 
 impl Store {
-    /**
-    Create or open a store at the given location.
-    */
     pub fn open(path: impl AsRef<Path>) -> Result<Self, Error> {
         let db = sled::Db::start_default(path).map_err(Error::fail)?;
 
@@ -38,9 +36,6 @@ impl Store {
         })
     }
 
-    /**
-    Close a store.
-    */
     pub fn close(&mut self) -> Result<(), Error> {
         self.inner.db.flush().map_err(Error::fail)?;
 
@@ -49,5 +44,9 @@ impl Store {
 
     pub fn read_begin(&self) -> Result<reader::Reader, Error> {
         Ok(reader::Reader::begin(self))
+    }
+
+    pub fn begin_write(&self) -> Result<writer::Writer, Error> {
+        Ok(writer::Writer::begin(self))
     }
 }

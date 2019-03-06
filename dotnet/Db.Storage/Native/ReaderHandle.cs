@@ -1,5 +1,4 @@
 using System;
-using System.Text;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 
@@ -7,10 +6,12 @@ namespace Db.Storage.Native
 {
     class ReaderHandle : SafeHandle
     {
-        ReaderHandle()
+        private ReaderHandle()
             : base(IntPtr.Zero, true)
         {
         }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
 
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
@@ -20,9 +21,7 @@ namespace Db.Storage.Native
             var h = handle;
             handle = IntPtr.Zero;
 
-            return Bindings.db_read_end(h, check: false).IsSuccess();
+            return Bindings.db_read_end(h, false).IsSuccess();
         }
-
-        public override bool IsInvalid => handle == IntPtr.Zero;
     }
 }

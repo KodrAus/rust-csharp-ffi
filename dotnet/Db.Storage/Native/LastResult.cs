@@ -20,12 +20,9 @@ namespace Db.Storage.Native
                     out var actualMessageLen,
                     out var lastResult);
 
-                if (result.IsBufferTooSmall())
-                {
-                    return FillLastResult(new Span<byte>(new byte[(int)actualMessageLen]));
-                }
+                if (result.IsBufferTooSmall()) return FillLastResult(new Span<byte>(new byte[(int) actualMessageLen]));
 
-                return (lastResult, Encoding.UTF8.GetString(messageBufPtr, (int)actualMessageLen));
+                return (lastResult, Encoding.UTF8.GetString(messageBufPtr, (int) actualMessageLen));
             }
         }
     }

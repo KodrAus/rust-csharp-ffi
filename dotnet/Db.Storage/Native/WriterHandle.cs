@@ -4,9 +4,9 @@ using System.Runtime.InteropServices;
 
 namespace Db.Storage.Native
 {
-    class StoreHandle : SafeHandle
+    class WriterHandle : SafeHandle
     {
-        private StoreHandle()
+        private WriterHandle()
             : base(IntPtr.Zero, true)
         {
         }
@@ -21,7 +21,7 @@ namespace Db.Storage.Native
             var h = handle;
             handle = IntPtr.Zero;
 
-            return Bindings.db_store_close(h, false).IsSuccess();
+            return Bindings.db_write_end(h, false).IsSuccess();
         }
     }
 }

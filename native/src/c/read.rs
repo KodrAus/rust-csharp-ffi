@@ -50,7 +50,7 @@ pub(super) fn into_fixed_buffer(
     // The entire payload fit in the buffer
     } else {
         *actual_value_len = written;
-        *key = data.key.to_bytes();
+        *key = DbKey(data.key.to_bytes());
 
         DbResult::Ok
     }

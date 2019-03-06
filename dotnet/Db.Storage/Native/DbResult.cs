@@ -6,7 +6,7 @@ namespace Db.Storage.Native
     [StructLayout(LayoutKind.Sequential)]
     public struct DbResult
     {
-        enum DbResultValue : uint
+        private enum DbResultValue : uint
         {
             Ok,
 
@@ -17,7 +17,7 @@ namespace Db.Storage.Native
             InternalError
         }
 
-        readonly DbResultValue _result;
+        private readonly DbResultValue _result;
 
         public static (DbResult, string) GetLastResult()
         {
@@ -27,15 +27,13 @@ namespace Db.Storage.Native
         internal DbResult Check()
         {
             if (IsSuccess() || IsBufferTooSmall()) return this;
-            
+
             var (lastResult, msg) = GetLastResult();
 
             // This isn't perfect, but avoids some cases where native calls are made
             // between checking for success.
             if (lastResult._result == _result)
-            {
                 throw new Exception($"Native storage failed ({_result}), {msg?.TrimEnd()}");
-            }
 
             throw new Exception($"Native storage failed with {_result}");
         }

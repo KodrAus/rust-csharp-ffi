@@ -41,4 +41,10 @@ impl<T: ?Sized + Sync> IsNull for super::HandleShared<T> {
     }
 }
 
+impl IsNull for super::DbKey {
+    fn is_null(&self) -> bool {
+        false
+    }
+}
+
 never_null!(usize, isize, u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, bool);

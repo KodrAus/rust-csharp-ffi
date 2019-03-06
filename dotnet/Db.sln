@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Db.Api", "Db.Api\Db.Api.csproj", "{0CD956C7-C2A1-49DE-9CF3-C64FF6FF61C0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Db.Storage", "Db.Storage\Db.Storage.csproj", "{8D43FC83-0E9F-4DCA-A0AB-DD29981DBA42}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Db.Storage.Tests", "Db.Storage.Tests\Db.Storage.Tests.csproj", "{EB6323BC-BFFF-46C0-9019-2326180E3A69}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0CD956C7-C2A1-49DE-9CF3-C64FF6FF61C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CD956C7-C2A1-49DE-9CF3-C64FF6FF61C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CD956C7-C2A1-49DE-9CF3-C64FF6FF61C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CD956C7-C2A1-49DE-9CF3-C64FF6FF61C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D43FC83-0E9F-4DCA-A0AB-DD29981DBA42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D43FC83-0E9F-4DCA-A0AB-DD29981DBA42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D43FC83-0E9F-4DCA-A0AB-DD29981DBA42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D43FC83-0E9F-4DCA-A0AB-DD29981DBA42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB6323BC-BFFF-46C0-9019-2326180E3A69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB6323BC-BFFF-46C0-9019-2326180E3A69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB6323BC-BFFF-46C0-9019-2326180E3A69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB6323BC-BFFF-46C0-9019-2326180E3A69}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

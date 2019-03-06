@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Db.Api.Storage;
+using Db.Storage;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Db.Storage;
 
 namespace Db.Api
 {
@@ -28,18 +24,17 @@ namespace Db.Api
             applicationPartManager.ApplicationParts.Add(new AssemblyPart(typeof(Startup).Assembly));
             services.Add(new ServiceDescriptor(typeof(ApplicationPartManager), applicationPartManager));
 
-            services.AddSingleton<Store>(Store.Open("./dbdata"));
+            services.AddSingleton(new DataStore(Store.Open("./dbdata")));
+            services.AddScoped(s => new Lazy<DataReader>(() => s.GetService<DataStore>().BeginRead()));
+            services.AddScoped(s => new Lazy<DataWriter>(() => s.GetService<DataStore>().BeginWrite()));
 
             services.AddMvcCore().AddJsonFormatters();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            
+            if (env.IsDevelopment()) app.UseDeveloperExceptionPage();
+
             app.UseMvc();
         }
     }

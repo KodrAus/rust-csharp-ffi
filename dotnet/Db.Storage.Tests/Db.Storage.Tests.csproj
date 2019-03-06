@@ -6,8 +6,10 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
+  <Import Project="../Native.targets" />
+
   <ItemGroup>
-    <ProjectReference Include="../../Db.Storage/Db.Storage.csproj" />
+    <ProjectReference Include="../Db.Storage/Db.Storage.csproj" />
   </ItemGroup>
 
   <ItemGroup>

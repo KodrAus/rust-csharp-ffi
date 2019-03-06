@@ -2,6 +2,7 @@ use std::{
     io::{
         self,
         Read,
+        Cursor,
     },
     panic::{
         RefUnwindSafe,
@@ -21,16 +22,7 @@ use crate::{
 
 pub struct Reader {
     iter: Iter,
-    current: Option<Data<Payload>>,
-}
-
-#[derive(Clone)]
-pub struct Payload(sled::IVec);
-
-impl Read for Payload {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        unimplemented!("implement a reader")
-    }
+    current: Option<Data<RawPayload>>,
 }
 
 impl Reader {
@@ -47,7 +39,7 @@ impl Reader {
         if let Some(ref current) = self.current {
             let r = f(Data {
                 key: current.key,
-                payload: current.payload.clone(),
+                payload: Payload::new(current.payload.clone()),
             });
 
             Some(r)
@@ -61,6 +53,7 @@ impl Reader {
             self.current = Some(next);
             Ok(true)
         } else {
+            self.current = None;
             Ok(false)
         }
     }
@@ -92,7 +85,7 @@ impl Iter {
         Iter(iter::Iter::new(db, |db| db.iter()))
     }
 
-    fn next(&mut self) -> Result<Option<Data<Payload>>, Error> {
+    fn next(&mut self) -> Result<Option<Data<RawPayload>>, Error> {
         let kv = self
             .0
             .rent_mut(|iter| iter.next())
@@ -100,16 +93,37 @@ impl Iter {
             .map_err(Error::fail)?;
 
         if let Some((k, v)) = kv {
-            let key = Key::from_vec(k)?;
-
             let data = Data {
-                key,
-                payload: Payload(v),
+                key: Key::from_vec(k)?,
+                payload: RawPayload(v),
             };
 
             Ok(Some(data))
         } else {
             Ok(None)
         }
+    }
+}
+
+pub struct Payload(Cursor<RawPayload>);
+
+#[derive(Clone)]
+struct RawPayload(sled::IVec);
+
+impl AsRef<[u8]> for RawPayload {
+    fn as_ref(&self) -> &[u8] {
+        &*self.0
+    }
+}
+
+impl Payload {
+    fn new(value: RawPayload) -> Self {
+        Payload(Cursor::new(value))
+    }
+}
+
+impl Read for Payload {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.0.read(buf)
     }
 }
