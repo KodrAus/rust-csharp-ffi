@@ -2,9 +2,6 @@
 C interface to the database.
 */
 
-// Almost everything here is going to be unsafe
-#![allow(unsafe_code)]
-
 use std::{
     slice,
     str,

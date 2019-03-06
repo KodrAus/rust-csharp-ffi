@@ -19,11 +19,11 @@ use std::{
 type ThreadId = usize;
 type ValueId = usize;
 
-static mut GLOBAL_ID: AtomicUsize = AtomicUsize::new(0);
+static GLOBAL_ID: AtomicUsize = AtomicUsize::new(0);
 thread_local!(static THREAD_ID: usize = next_thread_id());
 
 fn next_thread_id() -> usize {
-    unsafe { GLOBAL_ID.fetch_add(1, Ordering::SeqCst) }
+    GLOBAL_ID.fetch_add(1, Ordering::SeqCst)
 }
 
 fn get_thread_id() -> usize {
@@ -33,13 +33,13 @@ fn get_thread_id() -> usize {
 thread_local!(static VALUE_ID: UnsafeCell<usize> = UnsafeCell::new(0));
 
 fn next_value_id() -> usize {
-    VALUE_ID.with(|x| unsafe {
+    VALUE_ID.with(|x| unsafe_block!("The value never has overlapping mutable aliases" => {
         let x = x.get();
         let next = *x;
         *x += 1;
 
         next
-    })
+    }))
 }
 
 struct Registry(HashMap<ValueId, (UnsafeCell<*mut ()>, Box<Fn(&UnsafeCell<*mut ()>)>)>);
@@ -128,15 +128,15 @@ pub(super) struct DeferredCleanup<T> {
 impl<T> Drop for DeferredCleanup<T> {
     fn drop(&mut self) {
         if mem::needs_drop::<T>() {
-            unsafe {
-                if self.is_valid() {
+            if self.is_valid() {
+                unsafe_block!("The value exists on the current thread" => {
                     self.into_inner_unchecked();
-                } else {
-                    let mut garbage = GARBAGE.lock().expect("failed to lock garbage queue");
-                    let garbage = garbage.entry(self.thread_id).or_insert_with(|| Vec::new());
+                });
+            } else {
+                let mut garbage = GARBAGE.lock().expect("failed to lock garbage queue");
+                let garbage = garbage.entry(self.thread_id).or_insert_with(|| Vec::new());
 
-                    garbage.push(self.value_id);
-                }
+                garbage.push(self.value_id);
             }
         }
     }
@@ -158,10 +158,10 @@ impl<T> DeferredCleanup<T> {
         };
 
         if let Some(garbage) = garbage {
-            let remove = |value_id: ValueId| REGISTRY.with(|registry| unsafe {
+            let remove = |value_id: ValueId| REGISTRY.with(|registry| unsafe_block!("The value never has overlapping mutable aliases" => {
                 let registry = &mut (*registry.get()).0;
                 registry.remove(&value_id)
-            });
+            }));
 
             for value_id in garbage {
                 if let Some((data, drop)) = remove(value_id) {
@@ -170,7 +170,7 @@ impl<T> DeferredCleanup<T> {
             }
         }
 
-        REGISTRY.with(|registry| unsafe {
+        REGISTRY.with(|registry| unsafe_block!("The value never has overlapping mutable aliases" => {
             (*registry.get()).0.insert(
                 value_id,
                 (
@@ -181,7 +181,7 @@ impl<T> DeferredCleanup<T> {
                     }),
                 ),
             );
-        });
+        }));
 
         DeferredCleanup {
             thread_id,
@@ -197,7 +197,7 @@ impl<T> DeferredCleanup<T> {
             panic!("attempted to access resource from a different thread");
         }
 
-        REGISTRY.with(|registry| unsafe {
+        REGISTRY.with(|registry| unsafe_block!("There are no active mutable references" => {
             let registry = &(*registry.get()).0;
 
             if let Some(item) = registry.get(&self.value_id) {
@@ -205,21 +205,21 @@ impl<T> DeferredCleanup<T> {
             } else {
                 panic!("attempted to access resource from a different thread");
             }
-        })
+        }))
     }
 
     pub fn is_valid(&self) -> bool {
         let current_thread = get_thread_id();
-        let has_value = unsafe {
+        let has_value = unsafe_block!("There are no active mutable references" => {
             REGISTRY
                 .try_with(|registry| (*registry.get()).0.contains_key(&self.value_id))
                 .unwrap_or(false)
-        };
+        });
 
         self.thread_id == current_thread && has_value
     }
 
-    unsafe fn into_inner_unchecked(&mut self) -> T {
+    unsafe_fn!("The value must originate on the current thread" => fn into_inner_unchecked(&mut self) -> T {
         let ptr = REGISTRY
             .with(|registry| (*registry.get()).0.remove(&self.value_id))
             .unwrap()
@@ -227,7 +227,7 @@ impl<T> DeferredCleanup<T> {
             .into_inner();
         let value = Box::from_raw(ptr as *mut T);
         *value
-    }
+    });
 }
 
 unsafe_impl!("The inner value can't actually be accessed concurrently" => impl<T> Send for DeferredCleanup<T> {});
@@ -237,12 +237,12 @@ impl<T> Deref for DeferredCleanup<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
-        self.with_value(|value| unsafe { &*value.get() })
+        self.with_value(|value| unsafe_block!("The borrow of self protects the inner value" => { &*value.get() }))
     }
 }
 
 impl<T> DerefMut for DeferredCleanup<T> {
     fn deref_mut(&mut self) -> &mut T {
-        self.with_value(|value| unsafe { &mut *value.get() })
+        self.with_value(|value| unsafe_block!("The borrow of self protects the inner value" => { &mut *value.get() }))
     }
 }

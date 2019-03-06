@@ -11,6 +11,7 @@ macro_rules! ffi {
     ($(fn $name:ident ( $( $arg_ident:ident : $arg_ty:ty),* ) -> DbResult $body:expr)*) => {
         $(
             #[no_mangle]
+            #[allow(unsafe_code)]
             pub unsafe extern "C" fn $name( $($arg_ident : $arg_ty),* ) -> DbResult {
                 #[allow(unused_mut)]
                 unsafe fn call( $(mut $arg_ident: $arg_ty),* ) -> DbResult {
@@ -31,6 +32,7 @@ macro_rules! ffi_no_catch {
     ($(fn $name:ident ( $( $arg_ident:ident : $arg_ty:ty),* ) -> DbResult $body:expr)*) => {
         $(
             #[no_mangle]
+            #[allow(unsafe_code)]
             pub unsafe extern "C" fn $name( $($arg_ident : $arg_ty),* ) -> DbResult {
                 if $($crate::c::is_null::IsNull::is_null(&$arg_ident)) || * {
                     return DbResult::ArgumentNull;
