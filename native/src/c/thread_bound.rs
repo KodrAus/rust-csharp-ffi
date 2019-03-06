@@ -1,15 +1,23 @@
 use std::{
+    cell::UnsafeCell,
+    collections::HashMap,
+    marker::PhantomData,
+    mem,
     ops::{
         Deref,
         DerefMut,
     },
-    sync::atomic::{
-        AtomicUsize,
-        Ordering,
+    sync::{
+        atomic::{
+            AtomicUsize,
+            Ordering,
+        },
+        Mutex,
     },
 };
 
 type ThreadId = usize;
+type ValueId = usize;
 
 static mut GLOBAL_ID: AtomicUsize = AtomicUsize::new(0);
 thread_local!(static THREAD_ID: usize = next_thread_id());
@@ -20,6 +28,34 @@ fn next_thread_id() -> usize {
 
 fn get_thread_id() -> usize {
     THREAD_ID.with(|x| *x)
+}
+
+thread_local!(static VALUE_ID: UnsafeCell<usize> = UnsafeCell::new(0));
+
+fn next_value_id() -> usize {
+    VALUE_ID.with(|x| unsafe {
+        let x = x.get();
+        let next = *x;
+        *x += 1;
+
+        next
+    })
+}
+
+struct Registry(HashMap<ValueId, (UnsafeCell<*mut ()>, Box<Fn(&UnsafeCell<*mut ()>)>)>);
+
+impl Drop for Registry {
+    fn drop(&mut self) {
+        for (_, value) in self.0.iter() {
+            (value.1)(&value.0);
+        }
+    }
+}
+
+thread_local!(static REGISTRY: UnsafeCell<Registry> = UnsafeCell::new(Registry(Default::default())));
+
+lazy_static! {
+    static ref GARBAGE: Mutex<HashMap<ThreadId, Vec<ValueId>>> = Mutex::new(HashMap::new());
 }
 
 pub(super) struct ThreadBound<T: ?Sized> {
@@ -48,7 +84,7 @@ impl<T: Send> ThreadBound<T> {
 }
 
 impl<T: ?Sized> ThreadBound<T> {
-    fn check_id(&self) {
+    fn check(&self) {
         let current = get_thread_id();
 
         if self.thread_id != current {
@@ -64,14 +100,145 @@ impl<T: ?Sized> Deref for ThreadBound<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
-        self.check_id();
+        self.check();
         &self.inner
     }
 }
 
 impl<T: ?Sized> DerefMut for ThreadBound<T> {
     fn deref_mut(&mut self) -> &mut T {
-        self.check_id();
+        self.check();
         &mut self.inner
+    }
+}
+
+/**
+A thread-bound value that can be safely dropped from a different thread.
+
+The value is allocated in thread-local storage. When dropping, if the value
+is being accessed from a different thread it will be put onto a garbage queue
+for cleanup instead of being moved onto the current thread.
+*/
+pub(super) struct DeferredCleanup<T> {
+    thread_id: ThreadId,
+    value_id: ValueId,
+    _m: PhantomData<*mut T>,
+}
+
+impl<T> Drop for DeferredCleanup<T> {
+    fn drop(&mut self) {
+        if mem::needs_drop::<T>() {
+            unsafe {
+                if self.is_valid() {
+                    self.into_inner_unchecked();
+                } else {
+                    let mut garbage = GARBAGE.lock().expect("failed to lock garbage queue");
+                    let garbage = garbage.entry(self.thread_id).or_insert_with(|| Vec::new());
+
+                    garbage.push(self.value_id);
+                }
+            }
+        }
+    }
+}
+
+impl<T> DeferredCleanup<T> {
+    pub fn new(value: T) -> Self {
+        let thread_id = get_thread_id();
+        let value_id = next_value_id();
+
+        // Check for any garbage that needs cleaning up
+        // If we can't acquire a lock to the global queue
+        // then we just continue on.
+        if let Some(garbage) = GARBAGE
+            .try_lock()
+            .ok()
+            .and_then(|mut garbage| garbage.remove(&thread_id))
+        {
+            REGISTRY.with(|registry| unsafe {
+                let registry = &mut (*registry.get()).0;
+
+                for value_id in garbage {
+                    if let Some(value) = registry.remove(&value_id) {
+                        (value.1)(&value.0);
+                    }
+                }
+            });
+        }
+
+        REGISTRY.with(|registry| unsafe {
+            (*registry.get()).0.insert(
+                value_id,
+                (
+                    UnsafeCell::new(Box::into_raw(Box::new(value)) as *mut _),
+                    Box::new(|cell| {
+                        let b: Box<T> = Box::from_raw(*(cell.get() as *mut *mut T));
+                        mem::drop(b);
+                    }),
+                ),
+            );
+        });
+
+        DeferredCleanup {
+            thread_id,
+            value_id,
+            _m: PhantomData,
+        }
+    }
+
+    fn with_value<F: FnOnce(&UnsafeCell<Box<T>>) -> R, R>(&self, f: F) -> R {
+        let current_thread = get_thread_id();
+
+        if current_thread != self.thread_id {
+            panic!("attempted to access resource from a different thread");
+        }
+
+        REGISTRY.with(|registry| unsafe {
+            let registry = &(*registry.get()).0;
+
+            if let Some(item) = registry.get(&self.value_id) {
+                f(mem::transmute(&item.0))
+            } else {
+                panic!("attempted to access resource from a different thread");
+            }
+        })
+    }
+
+    pub fn is_valid(&self) -> bool {
+        let current_thread = get_thread_id();
+        let has_value = unsafe {
+            REGISTRY
+                .try_with(|registry| (*registry.get()).0.contains_key(&self.value_id))
+                .unwrap_or(false)
+        };
+
+        self.thread_id == current_thread && has_value
+    }
+
+    unsafe fn into_inner_unchecked(&mut self) -> T {
+        let ptr = REGISTRY
+            .with(|registry| (*registry.get()).0.remove(&self.value_id))
+            .unwrap()
+            .0
+            .into_inner();
+        let value = Box::from_raw(ptr as *mut T);
+        *value
+    }
+}
+
+unsafe_impl!("The inner value can't actually be accessed concurrently" => impl<T> Send for DeferredCleanup<T> {});
+unsafe_impl!("The inner value can't actually be accessed concurrently" => impl<T> Sync for DeferredCleanup<T> {});
+
+impl<T> Deref for DeferredCleanup<T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        self.with_value(|value| unsafe { &*value.get() })
+    }
+}
+
+impl<T> DerefMut for DeferredCleanup<T> {
+    fn deref_mut(&mut self) -> &mut T {
+        self.with_value(|value| unsafe { &mut *value.get() })
     }
 }

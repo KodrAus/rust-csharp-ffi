@@ -22,3 +22,9 @@ version = "0.1"
 
 [dependencies.libc]
 version = "0.2"
+
+[dependencies.rental]
+version = "0.5"
+
+[dependencies.lazy_static]
+version = "1"

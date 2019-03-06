@@ -17,15 +17,18 @@ use crate::store;
 #[macro_use]
 mod macros;
 
-mod is_null;
-mod result;
 mod handle;
+mod is_null;
+mod read;
+mod result;
 mod thread_bound;
 
 pub use self::{
-    result::*,
     handle::*,
+    result::*,
 };
+
+pub type DbKey = [u8; 16];
 
 #[repr(C)]
 pub struct DbStore {
@@ -33,6 +36,18 @@ pub struct DbStore {
 }
 
 pub type DbStoreHandle = HandleShared<DbStore>;
+
+#[repr(C)]
+pub struct DbReader {
+    // NOTE: The reader contains thread-local data.
+    // This means it's not safe to drop on its own
+    // from a finalization thread if the resource
+    // isn't explicitly disposed sooner. We use a `DeferredCleanup`
+    // here to defer cleanup until the original thread can do it.
+    inner: thread_bound::DeferredCleanup<store::reader::Reader>,
+}
+
+pub type DbReaderHandle = HandleOwned<DbReader>;
 
 ffi_no_catch! {
     fn db_last_result(
@@ -78,8 +93,72 @@ ffi! {
     }
 
     fn db_store_close(store: DbStoreHandle) -> DbResult {
-        DbStoreHandle::dealloc(store, |store| {
+        DbStoreHandle::dealloc(store, |mut store| {
             store.inner.close()?;
+
+            DbResult::Ok
+        })
+    }
+
+    fn db_read_begin(
+        store: DbStoreHandle,
+        reader: Out<DbReaderHandle>
+    ) -> DbResult {
+        *reader = DbReaderHandle::alloc(DbReader {
+            inner: thread_bound::DeferredCleanup::new(store.inner.read_begin()?),
+        });
+
+        DbResult::Ok
+    }
+
+    fn db_read_next(
+        reader: DbReaderHandle,
+        key: Out<DbKey>,
+        value_buf: *mut u8,
+        value_buf_len: size_t,
+        actual_value_len: Out<size_t>
+    ) -> DbResult {
+        let buf = slice::from_raw_parts_mut(value_buf, value_buf_len);
+        let reader = &mut *reader;
+
+        'read_event: loop {
+            let read_result = reader.inner.with_current(|mut current|
+                read::into_fixed_buffer(&mut current, buf, &mut *key, &mut *actual_value_len));
+
+            match read_result {
+                // If the result is ok then we're done with this event
+                // Fetch the next one
+                Some(DbResult::Ok) => {
+                    let mut has_next = reader.inner.move_next()?;
+
+                    if has_next {
+                        return DbResult::Ok;
+                    } else {
+                        return DbResult::Done;
+                    }
+                },
+                // If the result is anything but `Ok` then return.
+                // This probably means the caller-supplied buffer was
+                // too small
+                Some(result) => return result,
+                // If there is no result then we don't have an event.
+                // Fetch the next event and recurse.
+                // This probably means we're reading the first event,
+                // or have reached the end.
+                None => {
+                    if reader.inner.move_next()? {
+                        continue 'read_event;
+                    } else {
+                        return DbResult::Done;
+                    }
+                }
+            }
+        }
+    }
+
+    fn db_read_end(reader: DbReaderHandle) -> DbResult {
+        DbReaderHandle::dealloc(reader, |mut reader| {
+            reader.inner.complete()?;
 
             DbResult::Ok
         })
@@ -96,5 +175,8 @@ mod tests {
     fn assert_send_sync() {
         static_assert::is_send::<DbStoreHandle>();
         static_assert::is_unwind_safe::<DbStoreHandle>();
+
+        static_assert::is_send::<DbReaderHandle>();
+        static_assert::is_unwind_safe::<DbReaderHandle>();
     }
 }
