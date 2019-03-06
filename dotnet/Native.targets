@@ -65,6 +65,7 @@
     </ItemGroup>
 
     <ItemGroup Condition=" '$(IsAotBuild)' == 'true' ">
+        <IlcArg Include="--completetypemetadata" />
         <NativeLibrary Include="$(CargoArtifactPath)" />
     </ItemGroup>
 

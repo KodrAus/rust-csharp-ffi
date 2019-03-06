@@ -1,25 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Db.Storage;
-using Newtonsoft.Json;
 
 namespace Db.Api.Storage
 {
     public sealed class DataReader : IDisposable
     {
-        public void Dispose()
-        {
-            _reader.Dispose();
-        }
-
-        readonly Reader _reader;
+        private readonly Reader _reader;
 
         internal DataReader(Reader reader)
         {
             _reader = reader ?? throw new ArgumentNullException(nameof(reader));
         }
-        
+
+        public void Dispose()
+        {
+            _reader.Dispose();
+        }
+
         public IEnumerable<dynamic> Data()
         {
             var readInto = new byte[1024];

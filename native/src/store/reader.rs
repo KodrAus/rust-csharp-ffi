@@ -1,8 +1,8 @@
 use std::{
     io::{
         self,
-        Read,
         Cursor,
+        Read,
     },
     panic::{
         RefUnwindSafe,

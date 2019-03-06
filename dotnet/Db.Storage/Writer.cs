@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Db.Storage.Native;
 
 namespace Db.Storage
@@ -25,7 +26,10 @@ namespace Db.Storage
             {
                 fixed (void* valuePtr = value)
                 {
-                    Bindings.db_write_set(_handle, key, (IntPtr) valuePtr, (UIntPtr) value.Length);
+                    var rawKey = key.Value;
+                    var keyPtr = Unsafe.AsPointer(ref rawKey);
+
+                    Bindings.db_write_set(_handle, (IntPtr) keyPtr, (IntPtr) valuePtr, (UIntPtr) value.Length);
                 }
             }
         }

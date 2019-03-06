@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using Db.Api.Storage;
-using Microsoft.AspNetCore.Mvc;
+﻿using Db.Api.Storage;
 
 namespace Db.Api.Controllers
 {
@@ -22,7 +19,7 @@ namespace Db.Api.Controllers
         public JsonResult Get()
         {
             var values = _reader.Value.Data().ToList();
-            
+
             return new JsonResult(values);
         }
 

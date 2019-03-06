@@ -10,7 +10,7 @@ namespace Db.Storage
         private static readonly Encoder Encoder = Encoding.ASCII.GetEncoder();
 
         private DbKey _key;
-        
+
         internal Key(DbKey key)
         {
             _key = key;
@@ -34,11 +34,8 @@ namespace Db.Storage
 
         public static Key FromString(string key)
         {
-            if (key.Length < 10)
-            {
-                throw new ArgumentException("The key is too short", nameof(key));
-            }
-            
+            if (key.Length < 10) throw new ArgumentException("The key is too short", nameof(key));
+
             var hi = key.Substring(0, 8);
             var lo = Convert.ToUInt64(key.Substring(9));
 
@@ -48,9 +45,11 @@ namespace Db.Storage
         public override string ToString()
         {
             var (hi, lo) = this;
-            
+
             return $"{hi}-{lo}";
         }
+
+        internal DbKey Value => _key;
 
         public void Deconstruct(out string hi, out ulong lo)
         {

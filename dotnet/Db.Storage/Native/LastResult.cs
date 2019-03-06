@@ -12,7 +12,7 @@ namespace Db.Storage.Native
 
         private static unsafe (DbResult, string) FillLastResult(Span<byte> buffer)
         {
-            fixed (byte* messageBufPtr = &buffer[0])
+            fixed (byte* messageBufPtr = buffer)
             {
                 var result = Bindings.db_last_result(
                     (IntPtr) messageBufPtr,

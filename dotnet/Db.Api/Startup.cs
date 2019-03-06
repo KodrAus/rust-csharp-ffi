@@ -1,11 +1,5 @@
-﻿using System;
-using Db.Api.Storage;
+﻿using Db.Api.Storage;
 using Db.Storage;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Db.Api
 {

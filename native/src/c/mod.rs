@@ -10,8 +10,11 @@ use std::{
 use libc::size_t;
 
 use crate::{
+    data::{
+        self,
+        Data,
+    },
     store,
-    data::{self, Data},
 };
 
 #[macro_use]
@@ -176,17 +179,19 @@ ffi! {
 
     fn db_write_set(
         writer: DbWriterHandle,
-        key: DbKey,
+        key: *const DbKey,
         value: *const u8,
         value_len: size_t
     ) -> DbResult {
+        let key = &*key;
+
         let value_slice = slice::from_raw_parts(value, value_len);
 
         let data = Data {
             key: data::Key::from_bytes(key.0),
             payload: value_slice,
         };
-        
+
         writer.inner.set(data)?;
 
         DbResult::Ok

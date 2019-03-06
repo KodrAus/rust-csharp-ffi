@@ -94,13 +94,13 @@ namespace Db.Storage.Native
         [DllImport(NativeLibrary, EntryPoint = "db_write_set", ExactSpelling = true)]
         private static extern DbResult _db_write_set(
             WriterHandle writer,
-            Key key,
+            IntPtr key,
             IntPtr value,
             UIntPtr valueLen);
 
         public static DbResult db_write_set(
             WriterHandle writer,
-            Key key,
+            IntPtr key,
             IntPtr value,
             UIntPtr valueLen,
             bool check = true)

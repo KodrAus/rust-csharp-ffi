@@ -1,6 +1,9 @@
 <Directives>
     <Application>
         <Assembly Name="Db.Api" Dynamic="Required All" />
+        <Assembly Name="System.Private.CoreLib">
+            <Type Name="System.Func`2[[System.Object,System.Private.CoreLib],[System.Object,System.Private.CoreLib]]" Dynamic="Required All" />
+        </Assembly>
         <Assembly Name="Microsoft.AspNetCore.Server.Kestrel.Core">
             <Type Name="Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServer" Dynamic="Required All" />
             <Type Name="Microsoft.AspNetCore.Server.Kestrel.Core.Internal.KestrelServerOptionsSetup" Dynamic="Required All" />
