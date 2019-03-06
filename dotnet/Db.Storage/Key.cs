@@ -22,7 +22,9 @@ namespace Db.Storage
             {
                 var key = default(DbKey);
 
-                var written = Encoder.GetBytes(hi.AsSpan(), new Span<byte>(Unsafe.AsPointer(ref key), 8), true);
+                // This is safe because the key lives in this stack local
+                var keyPtr = Unsafe.AsPointer(ref key);
+                var written = Encoder.GetBytes(hi.AsSpan(), new Span<byte>(keyPtr, 8), true);
                 if (written != 8)
                     throw new ArgumentException("The hi string must contain exactly 8 ASCII chars", nameof(hi));
 
@@ -55,7 +57,10 @@ namespace Db.Storage
         {
             unsafe
             {
-                hi = Encoding.ASCII.GetString((byte*) Unsafe.AsPointer(ref _key), 8);
+                // This is safe because the value lives in this stack local
+                var rawHi = _key.hi;
+                hi = Encoding.ASCII.GetString((byte*) Unsafe.AsPointer(ref rawHi), 8);
+                
                 lo = _key.lo;
             }
         }

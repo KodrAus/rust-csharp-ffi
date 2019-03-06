@@ -1,4 +1,7 @@
-﻿namespace Db.Api
+﻿using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
+
+namespace Db.Api
 {
     public class Program
     {

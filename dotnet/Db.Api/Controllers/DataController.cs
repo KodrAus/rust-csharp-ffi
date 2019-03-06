@@ -1,4 +1,6 @@
-﻿using Db.Api.Storage;
+﻿using System.Linq;
+using Db.Api.Storage;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Db.Api.Controllers
 {
@@ -6,30 +8,35 @@ namespace Db.Api.Controllers
     [ApiController]
     public class DataController : ControllerBase
     {
-        private readonly Lazy<DataReader> _reader;
-        private readonly Lazy<DataWriter> _writer;
+        private readonly DataStore _store;
 
-        public DataController(Lazy<DataReader> reader, Lazy<DataWriter> writer)
+        public DataController(DataStore store)
         {
-            _reader = reader;
-            _writer = writer;
+            _store = store;
         }
 
         [HttpGet]
         public JsonResult Get()
         {
-            var values = _reader.Value.Data().ToList();
+            using (var reader = _store.BeginRead())
+            {
+                var values = reader.Data().ToList();
 
-            return new JsonResult(values);
+                return new JsonResult(values);
+            }
+            
         }
 
         [HttpPost]
         [Route("{key}")]
         public ActionResult Set(string key, [FromBody] object value)
         {
-            _writer.Value.Set(key, value);
+            using (var writer = _store.BeginWrite())
+            {
+                writer.Set(key, value);
 
-            return Ok();
+                return Ok();
+            }
         }
     }
 }

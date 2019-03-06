@@ -24,11 +24,12 @@ namespace Db.Storage
 
             unsafe
             {
+                // This is safe because the key lives in this stack local
+                var rawKey = key.Value;
+                var keyPtr = Unsafe.AsPointer(ref rawKey);
+                
                 fixed (void* valuePtr = value)
                 {
-                    var rawKey = key.Value;
-                    var keyPtr = Unsafe.AsPointer(ref rawKey);
-
                     Bindings.db_write_set(_handle, (IntPtr) keyPtr, (IntPtr) valuePtr, (UIntPtr) value.Length);
                 }
             }

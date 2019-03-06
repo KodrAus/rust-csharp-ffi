@@ -1,5 +1,10 @@
 ﻿using Db.Api.Storage;
 using Db.Storage;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Db.Api
 {
@@ -18,9 +23,9 @@ namespace Db.Api
             applicationPartManager.ApplicationParts.Add(new AssemblyPart(typeof(Startup).Assembly));
             services.Add(new ServiceDescriptor(typeof(ApplicationPartManager), applicationPartManager));
 
-            services.AddSingleton(new DataStore(Store.Open("./dbdata")));
-            services.AddScoped(s => new Lazy<DataReader>(() => s.GetService<DataStore>().BeginRead()));
-            services.AddScoped(s => new Lazy<DataWriter>(() => s.GetService<DataStore>().BeginWrite()));
+            var dataPath = Configuration.GetSection("Data")["Path"];
+
+            services.AddSingleton(new DataStore(Store.Open(dataPath)));
 
             services.AddMvcCore().AddJsonFormatters();
         }
