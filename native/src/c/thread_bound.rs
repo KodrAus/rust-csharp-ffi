@@ -33,13 +33,15 @@ fn get_thread_id() -> usize {
 thread_local!(static VALUE_ID: UnsafeCell<usize> = UnsafeCell::new(0));
 
 fn next_value_id() -> usize {
-    VALUE_ID.with(|x| unsafe_block!("The value never has overlapping mutable aliases" => {
-        let x = x.get();
-        let next = *x;
-        *x += 1;
+    VALUE_ID.with(|x| {
+        unsafe_block!("The value never has overlapping mutable aliases" => {
+            let x = x.get();
+            let next = *x;
+            *x += 1;
 
-        next
-    }))
+            next
+        })
+    })
 }
 
 struct Registry(HashMap<ValueId, (UnsafeCell<*mut ()>, Box<Fn(&UnsafeCell<*mut ()>)>)>);
@@ -158,10 +160,14 @@ impl<T> DeferredCleanup<T> {
         };
 
         if let Some(garbage) = garbage {
-            let remove = |value_id: ValueId| REGISTRY.with(|registry| unsafe_block!("The value never has overlapping mutable aliases" => {
-                let registry = &mut (*registry.get()).0;
-                registry.remove(&value_id)
-            }));
+            let remove = |value_id: ValueId| {
+                REGISTRY.with(|registry| {
+                    unsafe_block!("The value never has overlapping mutable aliases" => {
+                        let registry = &mut (*registry.get()).0;
+                        registry.remove(&value_id)
+                    })
+                })
+            };
 
             for value_id in garbage {
                 if let Some((data, drop)) = remove(value_id) {
@@ -170,18 +176,20 @@ impl<T> DeferredCleanup<T> {
             }
         }
 
-        REGISTRY.with(|registry| unsafe_block!("The value never has overlapping mutable aliases" => {
-            (*registry.get()).0.insert(
-                value_id,
-                (
-                    UnsafeCell::new(Box::into_raw(Box::new(value)) as *mut _),
-                    Box::new(|cell| {
-                        let b: Box<T> = Box::from_raw(*(cell.get() as *mut *mut T));
-                        mem::drop(b);
-                    }),
-                ),
-            );
-        }));
+        REGISTRY.with(|registry| {
+            unsafe_block!("The value never has overlapping mutable aliases" => {
+                (*registry.get()).0.insert(
+                    value_id,
+                    (
+                        UnsafeCell::new(Box::into_raw(Box::new(value)) as *mut _),
+                        Box::new(|cell| {
+                            let b: Box<T> = Box::from_raw(*(cell.get() as *mut *mut T));
+                            mem::drop(b);
+                        }),
+                    ),
+                );
+            })
+        });
 
         DeferredCleanup {
             thread_id,
@@ -197,15 +205,17 @@ impl<T> DeferredCleanup<T> {
             panic!("attempted to access resource from a different thread");
         }
 
-        REGISTRY.with(|registry| unsafe_block!("There are no active mutable references" => {
-            let registry = &(*registry.get()).0;
+        REGISTRY.with(|registry| {
+            unsafe_block!("There are no active mutable references" => {
+                let registry = &(*registry.get()).0;
 
-            if let Some(item) = registry.get(&self.value_id) {
-                f(mem::transmute(&item.0))
-            } else {
-                panic!("attempted to access resource from a different thread");
-            }
-        }))
+                if let Some(item) = registry.get(&self.value_id) {
+                    f(mem::transmute(&item.0))
+                } else {
+                    panic!("attempted to access resource from a different thread");
+                }
+            })
+        })
     }
 
     pub fn is_valid(&self) -> bool {
