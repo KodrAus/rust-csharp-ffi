@@ -150,20 +150,24 @@ impl<T> DeferredCleanup<T> {
         // Check for any garbage that needs cleaning up
         // If we can't acquire a lock to the global queue
         // then we just continue on.
-        if let Some(garbage) = GARBAGE
-            .try_lock()
-            .ok()
-            .and_then(|mut garbage| garbage.remove(&thread_id))
-        {
-            REGISTRY.with(|registry| unsafe {
-                let registry = &mut (*registry.get()).0;
+        let garbage = {
+            GARBAGE
+                .try_lock()
+                .ok()
+                .and_then(|mut garbage| garbage.remove(&thread_id))
+        };
 
-                for value_id in garbage {
-                    if let Some(value) = registry.remove(&value_id) {
-                        (value.1)(&value.0);
-                    }
-                }
+        if let Some(garbage) = garbage {
+            let remove = |value_id: ValueId| REGISTRY.with(|registry| unsafe {
+                let registry = &mut (*registry.get()).0;
+                registry.remove(&value_id)
             });
+
+            for value_id in garbage {
+                if let Some((data, drop)) = remove(value_id) {
+                    drop(&data);
+                }
+            }
         }
 
         REGISTRY.with(|registry| unsafe {
