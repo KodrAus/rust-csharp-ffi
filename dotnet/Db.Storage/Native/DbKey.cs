@@ -2,9 +2,9 @@ using System.Runtime.InteropServices;
 
 namespace Db.Storage.Native
 {
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Size = 16, Pack = 1)]
     unsafe struct DbKey
     {
-        internal fixed byte _data[16];
+        
     }
 }

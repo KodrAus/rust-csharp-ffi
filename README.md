@@ -59,7 +59,7 @@ The .NET runtime has a feature called Pinvoke for calling into and being called 
 
 The base cost of calling into unmanaged code at runtime makes fine-grained unmanaged calls unviable. When compiling with CoreRT though, Pinvoke calls to functions that are statically linked into the binary are treated like internal calls so can be made more efficiently (to make things concrete, I measured it as the difference between ~2000ns and ~70ns of overhead for an unmanaged call to a function like `int Add(int, int)` locally).
 
-On top of the base cost of calling into unmanaged code from the .NET runtime, each argument may need special marshaling. Only using blittable types like integers and simple structs can avoid that cost, or at least put it under your control.
+On top of the base cost of calling into unmanaged code from the .NET runtime, each argument may need special marshaling. Only using [blittable types](https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types) like integers and simple structs can avoid that cost, or at least put it under your control. CoreRT seems to require arguments to unmanaged functions must not be larger than the pointer size, so just about every Pinvoke signature uses `IntPtr`s and `SafeHandle`s as the type for each argument.
 
 ### Modeling the .NET runtime in Rust
 

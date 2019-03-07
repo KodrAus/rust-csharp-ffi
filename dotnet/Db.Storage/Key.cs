@@ -21,13 +21,13 @@ namespace Db.Storage
             unsafe
             {
                 var key = default(DbKey);
+                var keyPtr = Unsafe.AsPointer(ref key);
 
-                // This is safe because the key lives in this stack local
-                var written = Encoder.GetBytes(hi.AsSpan(), new Span<byte>(key._data, 8), true);
+                var written = Encoder.GetBytes(hi.AsSpan(), new Span<byte>(keyPtr, 8), true);
                 if (written != 8)
                     throw new ArgumentException("The hi string must contain exactly 8 ASCII chars", nameof(hi));
 
-                Unsafe.WriteUnaligned(Unsafe.Add<ulong>(key._data, 1), lo);
+                Unsafe.WriteUnaligned(Unsafe.Add<ulong>(keyPtr, 1), lo);
 
                 _key = key;
             }
@@ -59,8 +59,10 @@ namespace Db.Storage
 
             unsafe
             {
-                hi = Encoding.ASCII.GetString(local._data, 8);
-                lo = Unsafe.ReadUnaligned<ulong>(Unsafe.Add<ulong>(local._data, 1));
+                var localPtr = Unsafe.AsPointer(ref local);
+
+                hi = Encoding.ASCII.GetString((byte*)localPtr, 8);
+                lo = Unsafe.ReadUnaligned<ulong>(Unsafe.Add<ulong>(localPtr, 1));
             }
         }
 
@@ -76,12 +78,15 @@ namespace Db.Storage
 
         public bool Equals(Key other)
         {
-            var local = this;
+            var local = this._key;
             
             unsafe
             {
-                var thisSpan = new Span<byte>(local._key._data, 16);
-                var otherSpan = new Span<byte>(other._key._data, 16);
+                var localPtr = Unsafe.AsPointer(ref local);
+                var otherPtr = Unsafe.AsPointer(ref other._key);
+
+                var thisSpan = new Span<byte>(localPtr, 16);
+                var otherSpan = new Span<byte>(otherPtr, 16);
 
                 return thisSpan.SequenceEqual(otherSpan);
             }
@@ -99,8 +104,10 @@ namespace Db.Storage
 
             unsafe
             {
-                var hi = Unsafe.ReadUnaligned<ulong>(local._key._data);
-                var lo = Unsafe.ReadUnaligned<ulong>(Unsafe.Add<ulong>(local._key._data, 1));
+                var localPtr = Unsafe.AsPointer(ref local);
+
+                var hi = Unsafe.ReadUnaligned<ulong>(localPtr);
+                var lo = Unsafe.ReadUnaligned<ulong>(Unsafe.Add<ulong>(localPtr, 1));
                 
                 return (hi.GetHashCode() * 397) ^ lo.GetHashCode();
             }
