@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Db.Storage/Db.Storage.csproj" />
+    <ProjectReference Include="../Db.Api/Db.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

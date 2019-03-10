@@ -1,6 +1,7 @@
 using Xunit;
+using Db.Storage;
 
-namespace Db.Storage.Tests
+namespace Db.Tests.Storage
 {
     public class KeyTests
     {

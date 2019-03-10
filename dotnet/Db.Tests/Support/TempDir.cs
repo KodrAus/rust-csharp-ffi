@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 
-namespace Db.Storage.Tests.Support
+namespace Db.Tests.Support
 {
     public class TempDir : IDisposable
     {

@@ -1,6 +1,7 @@
 ﻿using System;
+using Db.Storage;
 
-namespace Db.Storage.Tests.Support
+namespace Db.Tests.Support
 {
     public class TempStore : IDisposable
     {

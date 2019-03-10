@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Buffers;
 
 namespace Db.Api
 {
@@ -25,7 +26,7 @@ namespace Db.Api
 
             var dataPath = Configuration.GetSection("Data")["Path"];
 
-            services.AddSingleton(new DataStore(Store.Open(dataPath)));
+            services.AddSingleton(new DataStore(MemoryPool<byte>.Shared, Store.Open(dataPath)));
 
             services.AddMvcCore().AddJsonFormatters();
         }

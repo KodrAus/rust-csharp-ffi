@@ -1,9 +1,10 @@
 using System;
 using System.Linq;
-using Db.Storage.Tests.Support;
+using Db.Tests.Support;
+using Db.Storage;
 using Xunit;
 
-namespace Db.Storage.Tests
+namespace Db.Tests.Storage
 {
     public class ReadWriteTests
     {

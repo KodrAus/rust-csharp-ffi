@@ -10,7 +10,6 @@ namespace Db.Storage
         internal Reader(ReaderHandle handle)
         {
             _handle = handle ?? throw new ArgumentNullException(nameof(handle));
-            ;
         }
 
         public void Dispose()
@@ -24,7 +23,7 @@ namespace Db.Storage
 
             unsafe
             {
-                fixed (byte* bufferPtr = buffer)
+                fixed (byte* bufferPtr = &buffer[0])
                 {
                     var result = Bindings.db_read_next(
                         _handle,

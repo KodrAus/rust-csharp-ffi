@@ -1,7 +1,8 @@
 ﻿using System.Text;
 using System.Threading;
+using Db.Storage;
 
-namespace Db.Storage.Tests.Support
+namespace Db.Tests.Support
 {
     public static class Some
     {
