@@ -15,8 +15,8 @@ namespace Db.Tests.Api
         {
             var events = new[]
             {
-                (Some.KeyWith(3).ToString(), new { title = "Data 1" }),
-                (Some.KeyWith(17).ToString(), new { title = "Data 2" })
+                new Data(Some.KeyWith(3).ToString(), new { title = "Data 1" }),
+                new Data(Some.KeyWith(17).ToString(), new { title = "Data 2" })
             };
 
             using (var tempStore = new TempStore())
@@ -24,7 +24,7 @@ namespace Db.Tests.Api
             {
                 using (var writer = store.BeginWrite())
                 {
-                    foreach (var (key, value) in events) writer.Set(key, value);
+                    foreach (var data in events) writer.Set(data);
                 }
 
                 using (var reader = store.BeginRead())
@@ -35,9 +35,9 @@ namespace Db.Tests.Api
 
                     foreach (dynamic read in readData)
                     {
-                        var (_, foundValue) = events.Single(evt => read.Key == evt.Item1);
+                        var expected = events.Single(evt => read.Key == evt.Key);
 
-                        Assert.Equal((string)read.Value.title, (string)foundValue.title);
+                        Assert.Equal((string)read.Value.title, (string)expected.DynamicValue().title);
                     }
                 }
             }

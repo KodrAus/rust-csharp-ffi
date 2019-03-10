@@ -33,7 +33,7 @@ namespace Db.Api.Controllers
         {
             using (var writer = _store.BeginWrite())
             {
-                writer.Set(key, value);
+                writer.Set(new Data(key, value));
 
                 return Ok();
             }

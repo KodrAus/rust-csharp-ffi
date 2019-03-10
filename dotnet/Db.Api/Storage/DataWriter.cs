@@ -19,11 +19,11 @@ namespace Db.Api.Storage
             _writer.Dispose();
         }
 
-        public void Set(string key, object value)
+        public void Set(Data data)
         {
-            var rawKey = Key.FromString(key);
+            var rawKey = Key.FromString(data.Key);
 
-            var json = JsonConvert.SerializeObject(value);
+            var json = JsonConvert.SerializeObject(data.Value);
             var jsonBytes = Encoding.UTF8.GetBytes(json);
 
             _writer.Set(rawKey, new Span<byte>(jsonBytes));
