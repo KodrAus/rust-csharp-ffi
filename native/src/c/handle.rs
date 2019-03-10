@@ -29,7 +29,8 @@ Consumers must ensure a handle is not used again after it has been deallocated.
 #[repr(transparent)]
 pub struct HandleShared<T: ?Sized>(*const T);
 
-unsafe_impl!("The handle is semantically `&T`" => impl<T: ?Sized + Sync> Send for HandleShared<T> {});
+unsafe_impl!("The handle is semantically `&T`" => impl<T: ?Sized> Send for HandleShared<T> where for<'a> &'a T: Send {});
+unsafe_impl!("The handle is semantically `&T`" => impl<T: ?Sized> Sync for HandleShared<T> where for<'a> &'a T: Sync {});
 
 impl<T: ?Sized + RefUnwindSafe> UnwindSafe for HandleShared<T> {}
 
@@ -39,14 +40,18 @@ impl<T: ?Sized> HandleShared<T> {
     }
 }
 
-impl<T: Send + Sync + 'static> HandleShared<T> {
-    pub(super) fn alloc(value: T) -> Self {
+impl<T> HandleShared<T>
+where
+    HandleShared<T>: Send + Sync,
+{
+    pub(super) fn alloc(value: T) -> Self
+    where
+        T: 'static,
+    {
         let v = Box::new(value);
         HandleShared(Box::into_raw(v))
     }
-}
-
-impl<T: Send + Sync> HandleShared<T> {
+    
     unsafe_fn!("There are no other live references and the handle won't be used again" =>
         pub(super) fn dealloc<R>(handle: Self, f: impl FnOnce(T) -> R) -> R {
             let v = Box::from_raw(handle.0 as *mut T);
@@ -60,7 +65,10 @@ not _technically_ needed here (the `alloc` method protects us)
 so we can catch ourselves using data in the handles that doesn't
 satisfy their safety requirements
 */
-impl<T: ?Sized + Send + Sync> Deref for HandleShared<T> {
+impl<T: ?Sized> Deref for HandleShared<T>
+where
+    HandleShared<T>: Send + Sync,
+{
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -85,7 +93,8 @@ Consumers must ensure a handle is not used again after it has been deallocated.
 #[repr(transparent)]
 pub struct HandleOwned<T: ?Sized>(*mut ThreadBound<T>);
 
-unsafe_impl!("The handle is semantically `&mut T`" => impl<T: ?Sized + Send> Send for HandleOwned<T> {});
+unsafe_impl!("The handle is semantically `&mut T`" => impl<T: ?Sized> Send for HandleOwned<T> where for<'a> &'a mut T: Send {});
+unsafe_impl!("The handle is semantically `&mut T`" => impl<T: ?Sized> Sync for HandleOwned<T> where for<'a> &'a mut T: Sync {});
 
 impl<T: ?Sized + RefUnwindSafe> UnwindSafe for HandleOwned<T> {}
 
@@ -95,16 +104,23 @@ impl<T: ?Sized> HandleOwned<T> {
     }
 }
 
-impl<T: Send + 'static> HandleOwned<T> {
-    pub(super) fn alloc(value: T) -> Self {
+impl<T> HandleOwned<T>
+where
+    HandleOwned<T>: Send,
+{
+    pub(super) fn alloc(value: T) -> Self
+    where
+        T: 'static,
+    {
         let v = Box::new(ThreadBound::new(value));
         HandleOwned(Box::into_raw(v))
     }
-}
 
-impl<T: Send> HandleOwned<T> {
     unsafe_fn!("There are no other live references and the handle won't be used again" =>
-        pub(super) fn dealloc<R>(handle: Self, f: impl FnOnce(T) -> R) -> R {
+        pub(super) fn dealloc<R>(handle: Self, f: impl FnOnce(T) -> R) -> R
+        where
+            T: Send,
+        {
             let v = Box::from_raw(handle.0);
             f(v.into_inner())
         });
@@ -116,7 +132,10 @@ not _technically_ needed here (the `alloc` method protects us)
 so we can catch ourselves using data in the handles that doesn't
 satisfy their safety requirements
 */
-impl<T: ?Sized + Send> Deref for HandleOwned<T> {
+impl<T: ?Sized> Deref for HandleOwned<T>
+where
+    HandleOwned<T>: Send,
+{
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -130,7 +149,10 @@ not _technically_ needed here (the `alloc` method protects us)
 so we can catch ourselves using data in the handles that doesn't
 satisfy their safety requirements
 */
-impl<T: ?Sized + Send> DerefMut for HandleOwned<T> {
+impl<T: ?Sized> DerefMut for HandleOwned<T>
+where
+    HandleOwned<T>: Send,
+{
     fn deref_mut(&mut self) -> &mut T {
         unsafe_block!("We own the interior value" => { &mut **self.0 })
     }
