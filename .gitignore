@@ -1,3 +1,8 @@
 *.user
 .idea
+.vscode
 dbdata
+/target
+Cargo.lock
+bin
+obj

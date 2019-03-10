@@ -52,11 +52,11 @@
         <CargoArtifact Condition=" '$(IsLinux)' == 'true' ">libdb.$(CargoExtension)</CargoArtifact>
         <CargoArtifact Condition=" '$(IsMacOS)' == 'true' ">libdb.$(CargoExtension)</CargoArtifact>
 
-        <CargoArtifactPath>$(MSBuildThisFileDirectory)/../native/target/$(CargoTarget)/$(Configuration)/$(CargoArtifact)</CargoArtifactPath>
+        <CargoArtifactPath>$(MSBuildThisFileDirectory)/../target/$(CargoTarget)/$(Configuration)/$(CargoArtifact)</CargoArtifactPath>
     </PropertyGroup>
 
     <Target Name="Cargo" BeforeTargets="Build">
-        <Exec Command="cargo +$(CargoChannel) build --target $(CargoTarget) $(CargoFlags)" WorkingDirectory="$(MSBuildThisFileDirectory)/../native" Condition=" '$(CargoSkipBuild)' == 'false' " />
+        <Exec Command="cargo +$(CargoChannel) build --target $(CargoTarget) $(CargoFlags)" WorkingDirectory="$(MSBuildThisFileDirectory)/.." Condition=" '$(CargoSkipBuild)' == 'false' " />
     </Target>
 
     <!-- In AOT builds, add a reference to the IL compiler and link the static native artifact -->

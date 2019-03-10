@@ -1,10 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Db.Api", "Db.Api\Db.Api.csproj", "{0CD956C7-C2A1-49DE-9CF3-C64FF6FF61C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Db.Api", "dotnet\Db.Api\Db.Api.csproj", "{0CD956C7-C2A1-49DE-9CF3-C64FF6FF61C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Db.Storage", "Db.Storage\Db.Storage.csproj", "{8D43FC83-0E9F-4DCA-A0AB-DD29981DBA42}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Db.Storage", "dotnet\Db.Storage\Db.Storage.csproj", "{8D43FC83-0E9F-4DCA-A0AB-DD29981DBA42}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Db.Storage.Tests", "Db.Storage.Tests\Db.Storage.Tests.csproj", "{EB6323BC-BFFF-46C0-9019-2326180E3A69}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Db.Storage.Tests", "dotnet\Db.Storage.Tests\Db.Storage.Tests.csproj", "{EB6323BC-BFFF-46C0-9019-2326180E3A69}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
