@@ -171,7 +171,7 @@ ffi! {
         writer: Out<DbWriterHandle>
     ) -> DbResult {
         *writer = DbWriterHandle::alloc(DbWriter {
-            inner: thread_bound::DeferredCleanup::new(store.inner.begin_write()?),
+            inner: thread_bound::DeferredCleanup::new(store.inner.write_begin()?),
         });
 
         DbResult::Ok

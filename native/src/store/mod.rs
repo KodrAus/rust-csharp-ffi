@@ -46,7 +46,7 @@ impl Store {
         Ok(reader::Reader::begin(self))
     }
 
-    pub fn begin_write(&self) -> Result<writer::Writer, Error> {
+    pub fn write_begin(&self) -> Result<writer::Writer, Error> {
         Ok(writer::Writer::begin(self))
     }
 }
