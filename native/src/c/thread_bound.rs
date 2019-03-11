@@ -60,7 +60,7 @@ lazy_static! {
     static ref GARBAGE: Mutex<HashMap<ThreadId, Vec<ValueId>>> = Mutex::new(HashMap::new());
 }
 
-pub(super) struct ThreadBound<T: ?Sized> {
+pub struct ThreadBound<T: ?Sized> {
     thread_id: ThreadId,
     inner: T,
 }
@@ -120,7 +120,7 @@ The value is allocated in thread-local storage. When dropping, if the value
 is being accessed from a different thread it will be put onto a garbage queue
 for cleanup instead of being moved onto the current thread.
 */
-pub(super) struct DeferredCleanup<T> {
+pub struct DeferredCleanup<T> {
     thread_id: ThreadId,
     value_id: ValueId,
     _m: PhantomData<*mut T>,

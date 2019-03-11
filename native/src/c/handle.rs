@@ -94,7 +94,7 @@ Consumers must ensure a handle is not used again after it has been deallocated.
 pub struct HandleOwned<T: ?Sized>(*mut ThreadBound<T>);
 
 unsafe_impl!("The handle is semantically `&mut T`" => impl<T: ?Sized> Send for HandleOwned<T> where for<'a> &'a mut T: Send {});
-unsafe_impl!("The handle is semantically `&mut T`" => impl<T: ?Sized> Sync for HandleOwned<T> where for<'a> &'a mut T: Sync {});
+unsafe_impl!("The handle uses `ThreadBound` for synchronization" => impl<T: ?Sized> Sync for HandleOwned<T> where ThreadBound<T>: Sync {});
 
 impl<T: ?Sized + RefUnwindSafe> UnwindSafe for HandleOwned<T> {}
 
