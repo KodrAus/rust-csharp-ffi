@@ -50,7 +50,7 @@ pub type DbReaderHandle = HandleOwned<DbReader>;
 
 #[repr(C)]
 pub struct DbWriter {
-    inner: thread_bound::DeferredCleanup<store::writer::Writer>,
+    inner: store::writer::Writer,
 }
 
 pub type DbWriterHandle = HandleOwned<DbWriter>;
@@ -171,7 +171,7 @@ ffi! {
         writer: Out<DbWriterHandle>
     ) -> DbResult {
         *writer = DbWriterHandle::alloc(DbWriter {
-            inner: thread_bound::DeferredCleanup::new(store.inner.write_begin()?),
+            inner: store.inner.write_begin()?,
         });
 
         DbResult::Ok
