@@ -30,10 +30,13 @@
 
     <!-- Cargo configuration -->
     <PropertyGroup>
-        <CargoChannel>nightly</CargoChannel>
+        <CargoChannel Condition=" $(CargoChannel) == '' ">nightly</CargoChannel>
+
         <CargoConfiguration>release</CargoConfiguration>
         <CargoConfiguration Condition=" '$(Configuration)' == 'Debug' ">debug</CargoConfiguration>
-        <CargoFlags Condition=" '$(CargoConfiguration)' == 'release' ">--release</CargoFlags>
+
+        <CargoFlags Condition=" '$(CargoConfiguration)' == 'release' ">$(CargoFlags) --release</CargoFlags>
+        
         <CargoSkipBuild Condition=" '$(CargoSkipBuild)' == '' ">false</CargoSkipBuild>
 
         <CargoTarget Condition=" '$(IsWindows)' == 'true' ">x86_64-pc-windows-msvc</CargoTarget>
@@ -52,7 +55,7 @@
         <CargoArtifact Condition=" '$(IsLinux)' == 'true' ">libdb.$(CargoExtension)</CargoArtifact>
         <CargoArtifact Condition=" '$(IsMacOS)' == 'true' ">libdb.$(CargoExtension)</CargoArtifact>
 
-        <CargoArtifactPath>$(MSBuildThisFileDirectory)/../target/$(CargoTarget)/$(Configuration)/$(CargoArtifact)</CargoArtifactPath>
+        <CargoArtifactPath>$(MSBuildThisFileDirectory)/../target/$(CargoTarget)/$(CargoConfiguration)/$(CargoArtifact)</CargoArtifactPath>
     </PropertyGroup>
 
     <Target Name="Cargo" BeforeTargets="Build">
@@ -62,11 +65,16 @@
     <!-- In AOT builds, add a reference to the IL compiler and link the static native artifact -->
     <ItemGroup Condition=" '$(IsAotBuild)' == 'true' ">
         <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-*" />
-    </ItemGroup>
 
-    <ItemGroup Condition=" '$(IsAotBuild)' == 'true' ">
         <IlcArg Include="--completetypemetadata" />
         <NativeLibrary Include="$(CargoArtifactPath)" />
+    </ItemGroup>
+
+    <!-- Some additional libs we need for Windows -->
+    <ItemGroup Condition=" '$(IsAotBuild)' == 'true' And '$(IsWindows)' == 'true' ">
+        <NativeLibrary Include="ws2_32.lib" />
+        <NativeLibrary Include="Userenv.lib" />
+        <NativeLibrary Include="Dbghelp.lib" />
     </ItemGroup>
 
     <!-- In standard builds, copy the native dynamic artifact to the output dir  -->
@@ -78,7 +86,7 @@
         <Copy Condition=" '$(TargetDir)' != '' " SourceFiles="@(CargoLibrary)" DestinationFolder="$(TargetDir)/Native" />
     </Target>
 
-    <Target Name="CargoPublishCopy" AfterTargets="Publish" Condition=" '$(IsAotBuild)' == 'false' ">
+    <Target Name="CargoPublishCopy" DependsOnTargets="Cargo" AfterTargets="Publish" Condition=" '$(IsAotBuild)' == 'false' ">
         <Copy SourceFiles="@(CargoLibrary)" DestinationFolder="$(PublishDir)/Native" />
     </Target>
 </Project>
