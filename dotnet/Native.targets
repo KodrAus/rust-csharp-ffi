@@ -58,7 +58,7 @@
     </PropertyGroup>
 
     <Target Name="Cargo" BeforeTargets="Build">
-        <Exec Command="echo %RUSTFLAGS%" />
+        <Exec Command="echo RUSTFLAGS=%RUSTFLAGS%" />
         <Exec Command="cargo +$(CargoChannel) build --target $(CargoTarget) $(CargoFlags)" WorkingDirectory="$(MSBuildThisFileDirectory)/.." Condition=" '$(CargoSkipBuild)' == 'false' " />
     </Target>
 
