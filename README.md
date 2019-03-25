@@ -1,4 +1,4 @@
-# A hybrid Rust + C# example
+# A hybrid Rust + C# example [![Build Status](https://dev.azure.com/kodraus/rust-csharp-ffi/_apis/build/status/KodrAus.rust-csharp-ffi?branchName=master)](https://dev.azure.com/kodraus/rust-csharp-ffi/_build/latest?definitionId=2&branchName=master)
 
 This repository contains an example Rust + C# hybrid application, based on [this blog post](https://blog.getseq.net/rust-at-datalust-how-we-integrate-rust-with-csharp/). It's an ASP.NET Core web API over an embedded Rust database called [`sled`](https://github.com/spacejam/sled).
 
