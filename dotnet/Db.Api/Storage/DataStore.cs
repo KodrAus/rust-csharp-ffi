@@ -29,5 +29,10 @@ namespace Db.Api.Storage
         {
             return new DataWriter(_store.BeginWrite());
         }
+
+        public DataDeleter BeginDelete()
+        {
+            return new DataDeleter(_store.BeginDelete());
+        }
     }
 }

@@ -11,6 +11,7 @@ use crate::error::Error;
 
 pub mod reader;
 pub mod writer;
+pub mod deleter;
 
 #[derive(Clone)]
 struct Inner {
@@ -48,5 +49,9 @@ impl Store {
 
     pub fn write_begin(&self) -> Result<writer::Writer, Error> {
         Ok(writer::Writer::begin(self))
+    }
+
+    pub fn delete_begin(&self) -> Result<deleter::Deleter, Error> {
+        Ok(deleter::Deleter::begin(self))
     }
 }

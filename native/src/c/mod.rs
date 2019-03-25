@@ -55,6 +55,13 @@ pub struct DbWriter {
 
 pub type DbWriterHandle = HandleOwned<DbWriter>;
 
+#[repr(C)]
+pub struct DbDeleter {
+    inner: store::deleter::Deleter,
+}
+
+pub type DbDeleterHandle = HandleOwned<DbDeleter>;
+
 ffi_no_catch! {
     fn db_last_result(
         message_buf: *mut u8,
@@ -200,6 +207,36 @@ ffi! {
     fn db_write_end(writer: DbWriterHandle) -> DbResult {
         DbWriterHandle::dealloc(writer, |mut writer| {
             writer.inner.complete()?;
+
+            DbResult::Ok
+        })
+    }
+
+    fn db_delete_begin(
+        store: DbStoreHandle,
+        deleter: Out<DbDeleterHandle>
+    ) -> DbResult {
+        *deleter = DbDeleterHandle::alloc(DbDeleter {
+            inner: store.inner.delete_begin()?,
+        });
+
+        DbResult::Ok
+    }
+
+    fn db_delete_remove(
+        deleter: DbDeleterHandle,
+        key: *const DbKey
+    ) -> DbResult {
+        let key = &*key;
+
+        deleter.inner.remove(data::Key::from_bytes(key.0))?;
+
+        DbResult::Ok
+    }
+
+    fn db_delete_end(deleter: DbDeleterHandle) -> DbResult {
+        DbDeleterHandle::dealloc(deleter, |mut deleter| {
+            deleter.inner.complete()?;
 
             DbResult::Ok
         })

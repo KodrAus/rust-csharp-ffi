@@ -116,6 +116,35 @@ namespace Db.Storage.Native
             return MaybeCheck(_db_write_end(writer), check);
         }
 
+        [DllImport(NativeLibrary, EntryPoint = "db_delete_begin", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        private static extern DbResult _db_delete_begin(StoreHandle store, out DeleterHandle deleter);
+
+        public static DbResult db_delete_begin(StoreHandle store, out DeleterHandle deleter, bool check = true)
+        {
+            return MaybeCheck(_db_delete_begin(store, out deleter), check);
+        }
+
+        [DllImport(NativeLibrary, EntryPoint = "db_delete_remove", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        private static extern DbResult _db_delete_remove(
+            DeleterHandle deleter,
+            IntPtr key);
+
+        public static DbResult db_delete_remove(
+            DeleterHandle deleter,
+            IntPtr key,
+            bool check = true)
+        {
+            return MaybeCheck(_db_delete_remove(deleter, key), check);
+        }
+
+        [DllImport(NativeLibrary, EntryPoint = "db_delete_end", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        private static extern DbResult _db_delete_end(IntPtr deleter);
+
+        public static DbResult db_delete_end(IntPtr deleter, bool check = true)
+        {
+            return MaybeCheck(_db_delete_end(deleter), check);
+        }
+
         private static DbResult MaybeCheck(DbResult result, bool check)
         {
             return check ? result.Check() : result;

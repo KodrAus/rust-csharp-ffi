@@ -38,5 +38,17 @@ namespace Db.Api.Controllers
                 return Ok();
             }
         }
+
+        [HttpDelete]
+        [Route("{key}")]
+        public ActionResult Remove(string key)
+        {
+            using (var deleter = _store.BeginDelete())
+            {
+                deleter.Remove(key);
+
+                return Ok();
+            }
+        }
     }
 }

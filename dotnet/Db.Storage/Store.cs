@@ -52,6 +52,14 @@ namespace Db.Storage
             return new Writer(writerHandle);
         }
 
+        public Deleter BeginDelete()
+        {
+            EnsureOpen();
+
+            Bindings.db_delete_begin(_handle, out var deleterHandle);
+            return new Deleter(deleterHandle);
+        }
+
         public void Close()
         {
             Dispose();
