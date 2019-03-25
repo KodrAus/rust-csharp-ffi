@@ -54,7 +54,7 @@
         <CargoArtifact Condition=" '$(IsLinux)' == 'true' ">libdb.$(CargoExtension)</CargoArtifact>
         <CargoArtifact Condition=" '$(IsMacOS)' == 'true' ">libdb.$(CargoExtension)</CargoArtifact>
 
-        <CargoArtifactPath>$(MSBuildThisFileDirectory)/../target/$(CargoTarget)/$(Configuration)/$(CargoArtifact)</CargoArtifactPath>
+        <CargoArtifactPath>$(MSBuildThisFileDirectory)/../target/$(CargoTarget)/$(CargoConfiguration)/$(CargoArtifact)</CargoArtifactPath>
     </PropertyGroup>
 
     <Target Name="Cargo" BeforeTargets="Build">
