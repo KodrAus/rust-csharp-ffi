@@ -30,12 +30,13 @@
 
     <!-- Cargo configuration -->
     <PropertyGroup>
-        <CargoChannel>nightly</CargoChannel>
+        <CargoChannel Condition=" $(CargoChannel) == '' ">nightly</CargoChannel>
+
         <CargoConfiguration>release</CargoConfiguration>
         <CargoConfiguration Condition=" '$(Configuration)' == 'Debug' ">debug</CargoConfiguration>
-        <CargoFlags Condition=" '$(CargoConfiguration)' == 'release' ">$(CargoFlags) --release</CargoFlags>
-        <RustFlags Condition=" '$(IsWindows)' == 'true' ">$(RustFlags) -C target-feature=+crt-static</RustFlags>
 
+        <CargoFlags Condition=" '$(CargoConfiguration)' == 'release' ">$(CargoFlags) --release</CargoFlags>
+        
         <CargoSkipBuild Condition=" '$(CargoSkipBuild)' == '' ">false</CargoSkipBuild>
 
         <CargoTarget Condition=" '$(IsWindows)' == 'true' ">x86_64-pc-windows-msvc</CargoTarget>
@@ -67,6 +68,13 @@
 
         <IlcArg Include="--completetypemetadata" />
         <NativeLibrary Include="$(CargoArtifactPath)" />
+    </ItemGroup>
+
+    <!-- Some additional libs we need for Windows -->
+    <ItemGroup Condition=" '$(IsAotBuild)' == 'true' And '$(IsWindows)' == 'true' ">
+        <NativeLibrary Include="ws2_32.lib" />
+        <NativeLibrary Include="Userenv.lib" />
+        <NativeLibrary Include="Dbghelp.lib" />
     </ItemGroup>
 
     <!-- In standard builds, copy the native dynamic artifact to the output dir  -->
