@@ -24,7 +24,6 @@ namespace Db.Storage
 
             unsafe
             {
-                // This is safe because the key lives in this stack local
                 var rawKey = key.Value;
                 var keyPtr = Unsafe.AsPointer(ref rawKey);
                 

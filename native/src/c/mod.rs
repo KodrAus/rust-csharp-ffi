@@ -264,9 +264,19 @@ mod tests {
     #[test]
     fn assert_send_sync() {
         static_assert::is_send::<DbStoreHandle>();
+        static_assert::is_sync::<DbStoreHandle>();
         static_assert::is_unwind_safe::<DbStoreHandle>();
 
         static_assert::is_send::<DbReaderHandle>();
+        static_assert::is_sync::<DbReaderHandle>();
         static_assert::is_unwind_safe::<DbReaderHandle>();
+
+        static_assert::is_send::<DbWriterHandle>();
+        static_assert::is_sync::<DbWriterHandle>();
+        static_assert::is_unwind_safe::<DbWriterHandle>();
+
+        static_assert::is_send::<DbDeleterHandle>();
+        static_assert::is_sync::<DbDeleterHandle>();
+        static_assert::is_unwind_safe::<DbDeleterHandle>();
     }
 }
