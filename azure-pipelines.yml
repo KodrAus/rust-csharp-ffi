@@ -6,8 +6,8 @@ jobs:
     vmImage: 'ubuntu-16.04'
   steps:
   - script: |
-    curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
-    echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
+      curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
+      echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
 
   - powershell: ci/linux-x64.ps1
 
@@ -17,8 +17,8 @@ jobs:
     vmImage: 'macOS-10.13'
   steps:
   - script: |
-    curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
-    echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
+      curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
+      echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
 
   - powershell: ci/osx-x64.ps1
 
@@ -28,8 +28,8 @@ jobs:
     vmImage: 'vs2017-win2016'
   steps:
   - script: |
-    curl -sSf -o rustup-init.exe https://win.rustup.rs
-    rustup-init.exe -y --default-toolchain nightly
-    echo "##vso[task.setvariable variable=PATH;]%PATH%;%USERPROFILE%\.cargo\bin"
+      curl -sSf -o rustup-init.exe https://win.rustup.rs
+      rustup-init.exe -y --default-toolchain nightly
+      echo "##vso[task.setvariable variable=PATH;]%PATH%;%USERPROFILE%\.cargo\bin"
 
   - powershell: ci/win-x64.ps1
