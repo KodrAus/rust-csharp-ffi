@@ -33,7 +33,9 @@
         <CargoChannel>nightly</CargoChannel>
         <CargoConfiguration>release</CargoConfiguration>
         <CargoConfiguration Condition=" '$(Configuration)' == 'Debug' ">debug</CargoConfiguration>
-        <CargoFlags Condition=" '$(CargoConfiguration)' == 'release' ">--release</CargoFlags>
+        <CargoFlags Condition=" '$(CargoConfiguration)' == 'release' ">$(CargoFlags) --release</CargoFlags>
+        <CargoFlags Condition=" '$(IsWindows)' == 'true' ">$(CargoFlags) -C target-feature=+crt-static</CargoFlags>
+
         <CargoSkipBuild Condition=" '$(CargoSkipBuild)' == '' ">false</CargoSkipBuild>
 
         <CargoTarget Condition=" '$(IsWindows)' == 'true' ">x86_64-pc-windows-msvc</CargoTarget>
