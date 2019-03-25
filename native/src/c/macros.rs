@@ -14,7 +14,8 @@ macro_rules! ffi {
             #[allow(unsafe_code)]
             pub unsafe extern "C" fn $name( $($arg_ident : $arg_ty),* ) -> DbResult {
                 #[allow(unused_mut)]
-                unsafe fn call( $(mut $arg_ident: $arg_ty),* ) -> DbResult {
+                #[deny(unsafe_code)]
+                fn call( $(mut $arg_ident: $arg_ty),* ) -> DbResult {
                     if $($crate::c::is_null::IsNull::is_null(&$arg_ident)) || * {
                         return DbResult::ArgumentNull;
                     }

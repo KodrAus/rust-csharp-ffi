@@ -27,9 +27,7 @@ impl Deleter {
     }
 
     pub fn remove(&mut self, key: Key) -> Result<(), Error> {
-        self.inner
-            .del(key)
-            .map_err(Error::fail)?;
+        self.inner.del(key).map_err(Error::fail)?;
 
         Ok(())
     }

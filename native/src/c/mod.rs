@@ -95,31 +95,35 @@ ffi_no_catch! {
 
 ffi! {
     fn db_store_open(path: *const u8, path_len: size_t, store: Out<DbStoreHandle>) -> DbResult {
-        let path_slice = slice::from_raw_parts(path, path_len);
+        let path_slice = unsafe_block!("The path lives as long as `db_store_open` and the length is within the path" => slice::from_raw_parts(path, path_len));
         let path = str::from_utf8(path_slice)?;
 
-        *store = DbStoreHandle::alloc(DbStore {
+        let handle = DbStoreHandle::alloc(DbStore {
             inner: store::Store::open(path)?,
         });
+
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => *store = handle);
 
         DbResult::Ok
     }
 
     fn db_store_close(store: DbStoreHandle) -> DbResult {
-        DbStoreHandle::dealloc(store, |mut store| {
+        unsafe_block!("The upstream caller guarantees the handle will not be accessed after being freed" => DbStoreHandle::dealloc(store, |mut store| {
             store.inner.close()?;
 
             DbResult::Ok
-        })
+        }))
     }
 
     fn db_read_begin(
         store: DbStoreHandle,
         reader: Out<DbReaderHandle>
     ) -> DbResult {
-        *reader = DbReaderHandle::alloc(DbReader {
+        let handle = DbReaderHandle::alloc(DbReader {
             inner: thread_bound::DeferredCleanup::new(store.inner.read_begin()?),
         });
+
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => *reader = handle);
 
         DbResult::Ok
     }
@@ -131,12 +135,16 @@ ffi! {
         value_buf_len: size_t,
         actual_value_len: Out<size_t>
     ) -> DbResult {
-        let buf = slice::from_raw_parts_mut(value_buf, value_buf_len);
+        let buf = unsafe_block!("The buffer lives as long as `db_read_next` and the length is within the buffer" => slice::from_raw_parts_mut(value_buf, value_buf_len));
         let reader = &mut *reader;
 
         'read_event: loop {
-            let read_result = reader.inner.with_current(|mut current|
-                read::into_fixed_buffer(&mut current, buf, &mut *key, &mut *actual_value_len));
+            let read_result = reader.inner.with_current(|mut current| {
+                let key = unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => &mut *key);
+                let actual_value_len = unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => &mut *actual_value_len);
+
+                read::into_fixed_buffer(&mut current, buf, key, actual_value_len)
+            });
 
             match read_result {
                 // If the result is ok then we're done with this event
@@ -166,20 +174,22 @@ ffi! {
     }
 
     fn db_read_end(reader: DbReaderHandle) -> DbResult {
-        DbReaderHandle::dealloc(reader, |mut reader| {
+        unsafe_block!("The upstream caller guarantees the handle will not be accessed after being freed" => DbReaderHandle::dealloc(reader, |mut reader| {
             reader.inner.complete()?;
 
             DbResult::Ok
-        })
+        }))
     }
 
     fn db_write_begin(
         store: DbStoreHandle,
         writer: Out<DbWriterHandle>
     ) -> DbResult {
-        *writer = DbWriterHandle::alloc(DbWriter {
+        let handle = DbWriterHandle::alloc(DbWriter {
             inner: store.inner.write_begin()?,
         });
+
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => *writer = handle);
 
         DbResult::Ok
     }
@@ -190,9 +200,9 @@ ffi! {
         value: *const u8,
         value_len: size_t
     ) -> DbResult {
-        let key = &*key;
+        let key = unsafe_block!("The key pointer lives as long as `db_write_set` and points to valid data" => &*key);
 
-        let value_slice = slice::from_raw_parts(value, value_len);
+        let value_slice = unsafe_block!("The buffer lives as long as `db_write_set` and the length is within the buffer" => slice::from_raw_parts(value, value_len));
 
         let data = Data {
             key: data::Key::from_bytes(key.0),
@@ -205,20 +215,22 @@ ffi! {
     }
 
     fn db_write_end(writer: DbWriterHandle) -> DbResult {
-        DbWriterHandle::dealloc(writer, |mut writer| {
+        unsafe_block!("The upstream caller guarantees the handle will not be accessed after being freed" => DbWriterHandle::dealloc(writer, |mut writer| {
             writer.inner.complete()?;
 
             DbResult::Ok
-        })
+        }))
     }
 
     fn db_delete_begin(
         store: DbStoreHandle,
         deleter: Out<DbDeleterHandle>
     ) -> DbResult {
-        *deleter = DbDeleterHandle::alloc(DbDeleter {
+        let handle = DbDeleterHandle::alloc(DbDeleter {
             inner: store.inner.delete_begin()?,
         });
+
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => *deleter = handle);
 
         DbResult::Ok
     }
@@ -227,7 +239,7 @@ ffi! {
         deleter: DbDeleterHandle,
         key: *const DbKey
     ) -> DbResult {
-        let key = &*key;
+        let key = unsafe_block!("The key pointer lives as long as `db_delete_remove` and points to valid data" => &*key);
 
         deleter.inner.remove(data::Key::from_bytes(key.0))?;
 
@@ -235,11 +247,11 @@ ffi! {
     }
 
     fn db_delete_end(deleter: DbDeleterHandle) -> DbResult {
-        DbDeleterHandle::dealloc(deleter, |mut deleter| {
+        unsafe_block!("The upstream caller guarantees the handle will not be accessed after being freed" => DbDeleterHandle::dealloc(deleter, |mut deleter| {
             deleter.inner.complete()?;
 
             DbResult::Ok
-        })
+        }))
     }
 }
 

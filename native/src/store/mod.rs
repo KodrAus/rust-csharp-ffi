@@ -9,9 +9,9 @@ use std::{
 
 use crate::error::Error;
 
+pub mod deleter;
 pub mod reader;
 pub mod writer;
-pub mod deleter;
 
 #[derive(Clone)]
 struct Inner {

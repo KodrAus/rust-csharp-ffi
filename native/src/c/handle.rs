@@ -51,7 +51,7 @@ where
         let v = Box::new(value);
         HandleShared(Box::into_raw(v))
     }
-    
+
     unsafe_fn!("There are no other live references and the handle won't be used again" =>
         pub(super) fn dealloc<R>(handle: Self, f: impl FnOnce(T) -> R) -> R {
             let v = Box::from_raw(handle.0 as *mut T);
