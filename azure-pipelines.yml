@@ -27,6 +27,8 @@ jobs:
 - job: WindowsBuild
   pool:
     vmImage: 'vs2017-win2016'
+  variables:
+    rustflags: '-C --target-feature=+crt-static'
   steps:
   - script: |
       curl -sSf -o rustup-init.exe https://win.rustup.rs
