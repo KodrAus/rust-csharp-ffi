@@ -34,7 +34,7 @@
         <CargoConfiguration>release</CargoConfiguration>
         <CargoConfiguration Condition=" '$(Configuration)' == 'Debug' ">debug</CargoConfiguration>
         <CargoFlags Condition=" '$(CargoConfiguration)' == 'release' ">$(CargoFlags) --release</CargoFlags>
-        <CargoFlags Condition=" '$(IsWindows)' == 'true' ">$(CargoFlags) -C target-feature=+crt-static</CargoFlags>
+        <RustFlags Condition=" '$(IsWindows)' == 'true' ">$(RustFlags) -C target-feature=+crt-static</RustFlags>
 
         <CargoSkipBuild Condition=" '$(CargoSkipBuild)' == '' ">false</CargoSkipBuild>
 
@@ -58,6 +58,7 @@
     </PropertyGroup>
 
     <Target Name="Cargo" BeforeTargets="Build">
+        <Exec  Command="echo $RUSTFLAGS" />
         <Exec Command="cargo +$(CargoChannel) build --target $(CargoTarget) $(CargoFlags)" WorkingDirectory="$(MSBuildThisFileDirectory)/.." Condition=" '$(CargoSkipBuild)' == 'false' " />
     </Target>
 
