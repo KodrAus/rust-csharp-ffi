@@ -1,11 +1,14 @@
-# CoreRT publish
-dotnet publish dotnet/Db.Api/Db.Api.csproj -c Release -f netcoreapp2.2 -r osx-x64 /p:AotBuild=true
+$scriptDir = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 
-dotnet clean
-cargo clean
+. $scriptDir/common.ps1
 
-dotnet restore
+Clean-OutputDirs
 dotnet test
 
 # CoreCLR publish
+Clean-OutputDirs
 dotnet publish dotnet/Db.Api/Db.Api.csproj -c Release -f netcoreapp2.2
+
+# CoreRT publish
+Clean-OutputDirs
+dotnet publish dotnet/Db.Api/Db.Api.csproj -c Release -f netcoreapp2.2 -r osx-x64 /p:AotBuild=true

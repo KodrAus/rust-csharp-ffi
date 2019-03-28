@@ -1,11 +1,6 @@
-function Clean-OutputDirs {
-    Remove-Item -Recurse -Force dotnet/**/bin
-    Remove-Item -Recurse -Force dotnet/**/obj
+$scriptDir = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 
-    if (Test-Path target) {
-        Remove-Item -Recurse -Force target
-    }
-}
+. $scriptDir/common.ps1
 
 Clean-OutputDirs
 dotnet test
