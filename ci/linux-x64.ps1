@@ -2,7 +2,9 @@ function Clean-OutputDirs {
     Remove-Item -Recurse -Force dotnet/**/bin
     Remove-Item -Recurse -Force dotnet/**/obj
 
-    Remove-Item -Recurse -Force target
+    if (Test-Path target) {
+        Remove-Item -Recurse -Force target
+    }
 }
 
 Clean-OutputDirs
