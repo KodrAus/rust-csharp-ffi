@@ -11,10 +11,7 @@ use std::{
 
 use failure::Fail;
 
-use crate::{
-    error::Error,
-    std_ext::prelude::*,
-};
+use crate::std_ext::prelude::*;
 
 thread_local! {
     static LAST_RESULT: RefCell<Option<LastResult>> = RefCell::new(None);
@@ -120,7 +117,7 @@ where
 {
     fn from(e: E) -> Self {
         let err = Some(format_error(&e));
-        let db_result = Error::fail(e).into_db_result();
+        let db_result = DbResult::InternalError;
 
         LAST_RESULT.with(|last_result| {
             *last_result.borrow_mut() = Some(LastResult {
@@ -167,12 +164,6 @@ impl Try for DbResult {
         }
 
         result
-    }
-}
-
-impl Error {
-    fn into_db_result(self) -> DbResult {
-        DbResult::InternalError
     }
 }
 
@@ -230,12 +221,6 @@ mod tests {
     enum TestError {
         #[fail(display = "an error message")]
         Variant(#[cause] TestInnerError),
-    }
-
-    impl From<TestError> for Error {
-        fn from(err: TestError) -> Error {
-            Error::fail(err)
-        }
     }
 
     #[test]

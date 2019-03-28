@@ -2,6 +2,18 @@
 C interface to the database.
 */
 
+// Unsafe is explicitly allowed through `unsafe_*` macros
+#![deny(unsafe_code)]
+// For converting Rust results into FFI results
+#![feature(try_trait)]
+
+#[macro_use]
+#[path = "../../std_ext/mod.rs"]
+mod std_ext;
+
+#[macro_use]
+extern crate lazy_static;
+
 use std::{
     slice,
     str,
@@ -9,7 +21,7 @@ use std::{
 
 use libc::size_t;
 
-use crate::{
+use db::{
     data::{
         self,
         Data,
@@ -72,12 +84,12 @@ ffi_no_catch! {
         DbResult::with_last_result(|last_result| {
             let (value, error) = last_result.unwrap_or((DbResult::Ok, None));
 
-            *result = value;
+            unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => *result = value);
 
             if let Some(error) = error {
-                let message = slice::from_raw_parts_mut(message_buf, message_buf_len);
+                let message = unsafe_block!("The buffer lives as long as `db_last_result` and the length is within the buffer" => slice::from_raw_parts_mut(message_buf, message_buf_len));
 
-                *actual_message_len = error.len();
+                unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => *actual_message_len = error.len());
 
                 if message.len() < error.len() {
                     return DbResult::BufferTooSmall;
@@ -85,7 +97,7 @@ ffi_no_catch! {
 
                 (&mut message[0..error.len()]).copy_from_slice(error.as_bytes());
             } else {
-                *actual_message_len = 0;
+                unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => *actual_message_len = 0);
             }
 
             DbResult::Ok

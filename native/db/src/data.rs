@@ -1,8 +1,8 @@
 use crate::error::Error;
 
 pub struct Data<P> {
-    pub(crate) key: Key,
-    pub(crate) payload: P,
+    pub key: Key,
+    pub payload: P,
 }
 
 pub const KEY_SIZE: usize = 16;
@@ -11,15 +11,15 @@ pub const KEY_SIZE: usize = 16;
 pub struct Key([u8; KEY_SIZE]);
 
 impl Key {
-    pub(crate) fn from_bytes(value: [u8; 16]) -> Self {
+    pub fn from_bytes(value: [u8; KEY_SIZE]) -> Self {
         Key(value)
     }
 
-    pub(crate) fn from_vec(value: Vec<u8>) -> Result<Self, Error> {
+    pub fn from_vec(value: Vec<u8>) -> Result<Self, Error> {
         Self::from_slice(&value)
     }
 
-    pub(crate) fn from_slice(value: &[u8]) -> Result<Self, Error> {
+    pub fn from_slice(value: &[u8]) -> Result<Self, Error> {
         if value.len() > KEY_SIZE {
             return Err(Error::msg(format!(
                 "key length `{}` is greater than the max allowed `{}`",
@@ -34,7 +34,7 @@ impl Key {
         Ok(Key(bytes))
     }
 
-    pub(crate) fn to_bytes(self) -> [u8; KEY_SIZE] {
+    pub fn to_bytes(self) -> [u8; KEY_SIZE] {
         self.0
     }
 }

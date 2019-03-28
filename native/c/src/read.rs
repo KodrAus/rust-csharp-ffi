@@ -1,12 +1,11 @@
 use std::io::Read;
 
 use crate::{
-    c::{
-        DbKey,
-        DbResult,
-    },
-    data::Data,
+    DbKey,
+    DbResult,
 };
+
+use db::data::Data;
 
 /// Read an event payload into a given buffer.
 ///

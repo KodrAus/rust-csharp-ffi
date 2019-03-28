@@ -5,14 +5,8 @@ authors = ["Ashley Mannix <ashleymannix@live.com.au>"]
 publish = false
 edition = "2018"
 
-[lib]
-crate-type = ["cdylib","staticlib"]
-
 [dependencies.sled]
 version = "0.19"
-
-[dependencies.regex]
-version = "1"
 
 [dependencies.failure]
 version = "0.1"
@@ -20,11 +14,5 @@ version = "0.1"
 [dependencies.failure_derive]
 version = "0.1"
 
-[dependencies.libc]
-version = "0.2"
-
 [dependencies.rental]
 version = "0.5"
-
-[dependencies.lazy_static]
-version = "1"

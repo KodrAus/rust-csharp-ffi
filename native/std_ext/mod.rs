@@ -1,6 +1,12 @@
 /*!
 Standard library extensions.
+
+These modules don't exist as a separate crate
+so the API can remain private.
 */
+
+#[macro_use]
+mod macros;
 
 #[cfg(test)]
 #[macro_use]
