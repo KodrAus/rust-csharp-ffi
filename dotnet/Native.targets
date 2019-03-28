@@ -30,6 +30,8 @@
 
     <!-- Cargo configuration -->
     <PropertyGroup>
+        <NativeLib>dbc</NativeLib>
+
         <CargoChannel Condition=" $(CargoChannel) == '' ">nightly</CargoChannel>
 
         <CargoConfiguration>release</CargoConfiguration>
@@ -51,9 +53,9 @@
         <CargoExtension Condition=" '$(IsLinux)' == 'true' And '$(IsAotBuild)' == 'true' ">a</CargoExtension>
         <CargoExtension Condition=" '$(IsMacOS)' == 'true' And '$(IsAotBuild)' == 'true' ">a</CargoExtension>
 
-        <CargoArtifact Condition=" '$(IsWindows)' == 'true' ">db.$(CargoExtension)</CargoArtifact>
-        <CargoArtifact Condition=" '$(IsLinux)' == 'true' ">libdb.$(CargoExtension)</CargoArtifact>
-        <CargoArtifact Condition=" '$(IsMacOS)' == 'true' ">libdb.$(CargoExtension)</CargoArtifact>
+        <CargoArtifact Condition=" '$(IsWindows)' == 'true' ">$(NativeLib).$(CargoExtension)</CargoArtifact>
+        <CargoArtifact Condition=" '$(IsLinux)' == 'true' ">lib$(NativeLib).$(CargoExtension)</CargoArtifact>
+        <CargoArtifact Condition=" '$(IsMacOS)' == 'true' ">lib$(NativeLib).$(CargoExtension)</CargoArtifact>
 
         <CargoArtifactPath>$(MSBuildThisFileDirectory)/../target/$(CargoTarget)/$(CargoConfiguration)/$(CargoArtifact)</CargoArtifactPath>
     </PropertyGroup>
@@ -64,7 +66,7 @@
 
     <!-- In AOT builds, add a reference to the IL compiler and link the static native artifact -->
     <ItemGroup Condition=" '$(IsAotBuild)' == 'true' ">
-        <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-*" />
+        <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-27527-01" />
 
         <IlcArg Include="--completetypemetadata" />
         <NativeLibrary Include="$(CargoArtifactPath)" />

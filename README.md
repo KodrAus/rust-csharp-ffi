@@ -45,9 +45,13 @@ where `$DOTNET_RID` is a [runtime identifier](https://docs.microsoft.com/en-us/d
 ### Project structure
 
 - `/native`: Contains the native, unmanaged Rust library.
+  - `/db`: The Rust storage engine implementation.
+  - `/c`: The Rust C bindings to the storage engine.
 - `/dotnet`: Contains the managed C# library (raw bindings and a web API built on top).
   - `/Db.Storage`: The raw bindings to the Rust library.
   - `/Db.Api`: An ASP.NET Core web API that uses the raw bindings.
+
+The most interesting bits for FFI live in the `/native/c` and `/dotnet/Db.Storage` projects.
 
 ### Building Rust with MsBuild
 

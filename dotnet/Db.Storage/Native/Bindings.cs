@@ -8,11 +8,11 @@ namespace Db.Storage.Native
 #if AOT
         const string NativeLibrary = "*";
 #elif WINDOWS
-        const string NativeLibrary = "Native/db.dll";
+        const string NativeLibrary = "Native/dbc.dll";
 #elif LINUX
-        const string NativeLibrary = "Native/libdb.so";
+        const string NativeLibrary = "Native/libdbc.so";
 #elif MACOS
-        private const string NativeLibrary = "Native/libdb.dylib";
+        private const string NativeLibrary = "Native/libdbc.dylib";
 #endif
 
         [DllImport(NativeLibrary, EntryPoint = "db_last_result", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
