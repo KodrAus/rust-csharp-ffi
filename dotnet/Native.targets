@@ -30,8 +30,6 @@
 
     <!-- Cargo configuration -->
     <PropertyGroup>
-        <NativeLib>dbc</NativeLib>
-
         <CargoChannel Condition=" $(CargoChannel) == '' ">nightly</CargoChannel>
 
         <CargoConfiguration>release</CargoConfiguration>
@@ -53,9 +51,9 @@
         <CargoExtension Condition=" '$(IsLinux)' == 'true' And '$(IsAotBuild)' == 'true' ">a</CargoExtension>
         <CargoExtension Condition=" '$(IsMacOS)' == 'true' And '$(IsAotBuild)' == 'true' ">a</CargoExtension>
 
-        <CargoArtifact Condition=" '$(IsWindows)' == 'true' ">$(NativeLib).$(CargoExtension)</CargoArtifact>
-        <CargoArtifact Condition=" '$(IsLinux)' == 'true' ">lib$(NativeLib).$(CargoExtension)</CargoArtifact>
-        <CargoArtifact Condition=" '$(IsMacOS)' == 'true' ">lib$(NativeLib).$(CargoExtension)</CargoArtifact>
+        <CargoArtifact Condition=" '$(IsWindows)' == 'true' ">dbc.$(CargoExtension)</CargoArtifact>
+        <CargoArtifact Condition=" '$(IsLinux)' == 'true' ">libdbc.$(CargoExtension)</CargoArtifact>
+        <CargoArtifact Condition=" '$(IsMacOS)' == 'true' ">libdbc.$(CargoExtension)</CargoArtifact>
 
         <CargoArtifactPath>$(MSBuildThisFileDirectory)/../target/$(CargoTarget)/$(CargoConfiguration)/$(CargoArtifact)</CargoArtifactPath>
     </PropertyGroup>
