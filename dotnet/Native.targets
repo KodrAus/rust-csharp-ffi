@@ -64,7 +64,7 @@
 
     <!-- In AOT builds, add a reference to the IL compiler and link the static native artifact -->
     <ItemGroup Condition=" '$(IsAotBuild)' == 'true' ">
-        <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-27527-01" />
+        <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-*" />
 
         <IlcArg Include="--completetypemetadata" />
         <NativeLibrary Include="$(CargoArtifactPath)" />
