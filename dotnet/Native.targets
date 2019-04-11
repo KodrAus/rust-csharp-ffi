@@ -11,12 +11,12 @@
     </PropertyGroup>
 
     <!-- Compile-time RIDs -->
-    <PropertyGroup Condition=" '$(NativeRid)' == 'win81-x64' Or ('$(NativeRid)' == '' And '$([MSBuild]::IsOsPlatform(`WINDOWS`))' == 'true') ">
+    <PropertyGroup Condition=" '$(NativeRid)' == 'win-x64' Or ('$(NativeRid)' == '' And '$([MSBuild]::IsOsPlatform(`WINDOWS`))' == 'true') ">
         <IsWindows>true</IsWindows>
         <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
     </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(NativeRid)' == 'ubuntu.18.04-x64' Or '$(NativeRid)' == 'linux-x64' Or ('$(NativeRid)' == '' And '$([MSBuild]::IsOsPlatform(`LINUX`))' == 'true') ">
+    <PropertyGroup Condition=" '$(NativeRid)' == 'linux-x64' Or ('$(NativeRid)' == '' And '$([MSBuild]::IsOsPlatform(`LINUX`))' == 'true') ">
         <IsLinux>true</IsLinux>
         <IsUnix>true</IsUnix>
         <DefineConstants>$(DefineConstants);LINUX;UNIX</DefineConstants>
@@ -32,12 +32,10 @@
     <PropertyGroup>
         <CargoChannel Condition=" $(CargoChannel) == '' ">nightly</CargoChannel>
 
+        <CargoTargetPath>$(MSBuildThisFileDirectory)/../target</CargoTargetPath>
+
         <CargoConfiguration>release</CargoConfiguration>
         <CargoConfiguration Condition=" '$(Configuration)' == 'Debug' ">debug</CargoConfiguration>
-
-        <CargoFlags Condition=" '$(CargoConfiguration)' == 'release' ">$(CargoFlags) --release</CargoFlags>
-        
-        <CargoSkipBuild Condition=" '$(CargoSkipBuild)' == '' ">false</CargoSkipBuild>
 
         <CargoTarget Condition=" '$(IsWindows)' == 'true' ">x86_64-pc-windows-msvc</CargoTarget>
         <CargoTarget Condition=" '$(IsLinux)' == 'true' ">x86_64-unknown-linux-gnu</CargoTarget>
@@ -51,15 +49,20 @@
         <CargoExtension Condition=" '$(IsLinux)' == 'true' And '$(IsAotBuild)' == 'true' ">a</CargoExtension>
         <CargoExtension Condition=" '$(IsMacOS)' == 'true' And '$(IsAotBuild)' == 'true' ">a</CargoExtension>
 
-        <CargoArtifact Condition=" '$(IsWindows)' == 'true' ">dbc.$(CargoExtension)</CargoArtifact>
-        <CargoArtifact Condition=" '$(IsLinux)' == 'true' ">libdbc.$(CargoExtension)</CargoArtifact>
-        <CargoArtifact Condition=" '$(IsMacOS)' == 'true' ">libdbc.$(CargoExtension)</CargoArtifact>
+        <CargoArtifact Condition=" '$(IsWindows)' == 'true' ">$(CargoPackage).$(CargoExtension)</CargoArtifact>
+        <CargoArtifact Condition=" '$(IsLinux)' == 'true' ">lib$(CargoPackage).$(CargoExtension)</CargoArtifact>
+        <CargoArtifact Condition=" '$(IsMacOS)' == 'true' ">lib$(CargoPackage).$(CargoExtension)</CargoArtifact>
 
-        <CargoArtifactPath>$(MSBuildThisFileDirectory)/../target/$(CargoTarget)/$(CargoConfiguration)/$(CargoArtifact)</CargoArtifactPath>
+        <CargoArtifactPath>$(CargoWorkspacePath)/target/$(CargoTarget)/$(CargoConfiguration)/$(CargoArtifact)</CargoArtifactPath>
     </PropertyGroup>
 
+    <ItemGroup>
+        <CargoBuildArg Include="--target $(CargoTarget)" />
+        <CargoBuildArg Condition=" '$(CargoConfiguration)' == 'release' " Include="--release" />
+    </ItemGroup>
+
     <Target Name="Cargo" BeforeTargets="Build">
-        <Exec Command="cargo +$(CargoChannel) build --target $(CargoTarget) $(CargoFlags)" WorkingDirectory="$(MSBuildThisFileDirectory)/.." Condition=" '$(CargoSkipBuild)' == 'false' " />
+        <Exec Command="cargo +$(CargoChannel) build @(CargoBuildArg, ' ')" WorkingDirectory="$(CargoWorkspacePath)" />
     </Target>
 
     <!-- In AOT builds, add a reference to the IL compiler and link the static native artifact -->
