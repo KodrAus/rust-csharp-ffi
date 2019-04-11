@@ -5,7 +5,7 @@
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
 
-  <Import Project="../Native.targets" />
+  <Import Project="../Dbc.targets" />
 
   <ItemGroup>
     <Folder Include="wwwroot" />

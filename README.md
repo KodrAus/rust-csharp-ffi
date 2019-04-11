@@ -55,7 +55,9 @@ The most interesting bits for FFI live in the `/native/c` and `/dotnet/Db.Storag
 
 ### Building Rust with MsBuild
 
-The `Native.targets` file contains properties and targets that can call `cargo build` on the native library when building the managed one. It also has compile-time constants for the target platform, and whether or not compilation is ahead-of-time. That way, `dotnet build` and `dotnet publish` can coordinate the complete managed and unmanaged build process in a single invocation.
+The `dotnet/Native.targets` file contains properties and targets that can call `cargo build` on the native library when building the managed one. It attempts to be project-agnostic. It also has compile-time constants for the target platform, and whether or not compilation is ahead-of-time. That way, `dotnet build` and `dotnet publish` can coordinate the complete managed and unmanaged build process in a single invocation.
+
+The `dotnet/Dbc.targets` file is specific for this sample.
 
 ### Calling unmanaged code from .NET
 
