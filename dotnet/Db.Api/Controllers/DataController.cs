@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Db.Api.Storage;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,9 +9,9 @@ namespace Db.Api.Controllers
     [ApiController]
     public class DataController : ControllerBase
     {
-        private readonly DataStore _store;
+        private readonly Lazy<DataStore> _store;
 
-        public DataController(DataStore store)
+        public DataController(Lazy<DataStore> store)
         {
             _store = store;
         }
@@ -18,7 +19,7 @@ namespace Db.Api.Controllers
         [HttpGet]
         public JsonResult Get()
         {
-            using (var reader = _store.BeginRead())
+            using (var reader = _store.Value.BeginRead())
             {
                 var values = reader.Data().ToList();
 
@@ -31,7 +32,7 @@ namespace Db.Api.Controllers
         [Route("{key}")]
         public ActionResult Set(string key, [FromBody] object value)
         {
-            using (var writer = _store.BeginWrite())
+            using (var writer = _store.Value.BeginWrite())
             {
                 writer.Set(new Data(key, value));
 
@@ -43,7 +44,7 @@ namespace Db.Api.Controllers
         [Route("{key}")]
         public ActionResult Remove(string key)
         {
-            using (var deleter = _store.BeginDelete())
+            using (var deleter = _store.Value.BeginDelete())
             {
                 deleter.Remove(key);
 

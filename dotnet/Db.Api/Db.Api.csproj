@@ -11,16 +11,6 @@
     <Folder Include="wwwroot" />
   </ItemGroup>
 
-  <!--
-    This XML file documents the exact uses of reflection for AOT builds.
-
-    It's a bit miserable to work with but will hopefully be possible to avoid or
-    at least generate in the future.
-  -->
-  <ItemGroup Condition=" '$(IsAotBuild)' == 'true' ">
-    <RdXmlFile Include="rd.xml" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="../Db.Storage/Db.Storage.csproj" />
   </ItemGroup>
@@ -29,6 +19,8 @@
     <PackageReference Include="Microsoft.AspNetCore" Version="2.1.0" /> 
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.1.0" /> 
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="2.1.0" />
+    
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.4.0" />
   </ItemGroup>
 
 </Project>

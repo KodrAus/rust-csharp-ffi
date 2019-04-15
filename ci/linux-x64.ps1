@@ -2,9 +2,9 @@ $scriptDir = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 
 . $scriptDir/common.ps1
 
-Clean-OutputDirs
+## Clean-OutputDirs
 
-dotnet test
+## dotnet test
 if ($LastExitCode) { exit 1 }
 
 # CoreCLR publish
