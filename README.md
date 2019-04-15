@@ -40,9 +40,14 @@ $ ./bin/Debug/netcoreapp2.2/$DOTNET_RID/publish/Db.Api
 
 where `$DOTNET_RID` is a [runtime identifier](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog).
 
-## Notes
+### Configuration
 
-### Project structure
+The web API (`Db.Api` project) accepts the following command-line arguments:
+
+- `--datapath`: The path to use for persistent data.
+- `--urls`: The urls to listen on.
+
+## Project structure
 
 - `/native`: Contains the native, unmanaged Rust library.
   - `/db`: The Rust storage engine implementation.
@@ -53,26 +58,36 @@ where `$DOTNET_RID` is a [runtime identifier](https://docs.microsoft.com/en-us/d
 
 The most interesting bits for FFI live in the `/native/c` and `/dotnet/Db.Storage` projects.
 
+## Notes
+
+The following section contains some rough notes about aspects of the sample. Some of it may be inaccurate or out-of-date! If you spot anything PRs are very welcome :)
+
 ### Building Rust with MsBuild
 
-The `dotnet/Native.targets` file contains properties and targets that can call `cargo build` on the native library when building the managed one. It attempts to be project-agnostic. It also has compile-time constants for the target platform, and whether or not compilation is ahead-of-time. That way, `dotnet build` and `dotnet publish` can coordinate the complete managed and unmanaged build process in a single invocation.
+Calling `cargo` commands and copying native binaries is managed by MsBuild through `targets` files. Calling something like `dotnet run -p dotnet/Db.Api/Db.Api.csproj` will also execute `cargo build -p dbc`.
 
-The `dotnet/Dbc.targets` file is specific for this sample.
+The `dotnet/Native.targets` file contains properties and targets that can call `cargo build` on the native library when building the managed one. It attempts to be project-agnostic. It also has compile-time constants for the target platform, and whether or not compilation is ahead-of-time (using CoreRT).
 
-### Calling unmanaged code from .NET
-
-The .NET runtime has a feature called Pinvoke for calling into and being called from 'unmanaged' code (like our Rust library). Runtime features like garbage collection and exception handling impose requirements on code within the runtime that isn't guaranteed to be upheld by unmanaged code. When it encounters an unmanaged call, the runtime will generate code around it that performs some bookkeeping to make sure everything works.
-
-The base cost of calling into unmanaged code at runtime is significant. That usually makes fine-grained unmanaged calls unviable. When compiling with CoreRT though, Pinvoke calls to functions that are statically linked into the binary appear to be treated like internal calls so can be made more efficiently (to make things concrete, I measured it as the difference between ~2000ns and ~70ns of overhead for an unmanaged call to a function like `int Add(int, int)` locally).
-
-On top of the base cost of calling into unmanaged code within the .NET runtime, each argument in an unmanaged function may need special marshaling. Using only [blittable types](https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types) like integers and simple structs can avoid that extra cost, or at least put marshaling under your control.
+The `dotnet/Dbc.targets` file is specific for this sample. It sets some MsBuild properties that point the `cargo build` command at the right Rust package to build. Each C# project needs to import the `Dbc.targets`.
 
 ### Modeling the .NET runtime in Rust
 
-Handles in the Rust C ABI try to model the way C# can interact with them. Some considerations are:
+We model the FFI on the Rust side and owned datastructures are allocated in Rust's heap.
+
+Handles in the Rust C ABI try to model the way C# _can_ interact with them rather than just how we _expect_ it to. Some considerations are:
 
 - C# doesn't guarantee data-race freedom. Multiple threads may attempt to use the same value concurrently.
-- If an unmanaged resource reaches finalization, the .NET runtime will attempt to free them from a different thread than the one that created them.
-- C# has APIs that can protect an unmanaged resource from being used after it's been freed.
+- If an unmanaged resource is not manually disposed and reaches finalization, the .NET runtime will attempt to free it from a different thread than the one that created it. The unmanaged resource will be effectively _moved_ into the finalization thread.
+- C#'s `SafeHandle` can protect an unmanaged resource from being used before it's been allocated or after it's been freed.
 
-These constraints lead to the `HandleShared` and `HandleOwned` wrappers.
+These constraints lead to the `HandleShared` and `HandleOwned` types that are used in the C bindings.
+
+### Calling unmanaged code from .NET
+
+The .NET runtime has a feature called Pinvoke for calling into, and being called from, 'unmanaged' code (like our Rust library). The base cost of calling into unmanaged code at runtime is significant.
+
+Runtime features like garbage collection and exception handling impose requirements on running .NET code that aren't guaranteed to be upheld by unmanaged code. For that reason, when the .NET runtime encounters an unmanaged call during JIT compilation, it will generate code around it that performs some bookkeeping to make sure everything works no matter how that unmanaged code behaves.
+
+That extra work per Pinvoke usually makes fine-grained unmanaged calls unviable. On top of the base cost of calling into unmanaged code within the .NET runtime, each argument in an unmanaged function may need special marshaling. Using only [blittable types](https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types) like fundamental value types, pointers and simple structs can avoid that extra cost, or at least put that marshaling cost under your control.
+
+CoreRT works a little differently. Pinvoke calls to functions that are statically linked into the binary appear to be treated like internal calls. CoreRT also has a different runtime implementation of the before-and-after bookkeeping that does a bit less work. The result is that calls to unmanaged code in CoreRT can be made more efficiently (to make things concrete, I measured it as the difference between ~2000ns and ~70ns of overhead for an unmanaged call to a function like `int Add(int, int)` locally).

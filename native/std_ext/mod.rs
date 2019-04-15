@@ -5,6 +5,8 @@ These modules don't exist as a separate crate
 so the API can remain private.
 */
 
+#![allow(dead_code)]
+
 #[macro_use]
 mod macros;
 
