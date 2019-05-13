@@ -80,7 +80,7 @@ Handles in the Rust C ABI try to model the way C# _can_ interact with them rathe
 - If an unmanaged resource is not manually disposed and reaches finalization, the .NET runtime will attempt to free it from a different thread than the one that created it. The unmanaged resource will be effectively _moved_ into the finalization thread.
 - C#'s `SafeHandle` can protect an unmanaged resource from being used before it's been allocated or after it's been freed.
 
-These constraints lead to the `HandleShared` and `HandleOwned` types that are used in the C bindings.
+These constraints lead to the `HandleShared` and `HandleExclusive` types that are used in the C bindings.
 
 ### Calling unmanaged code from .NET
 

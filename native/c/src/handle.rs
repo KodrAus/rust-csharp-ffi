@@ -91,29 +91,29 @@ The handle _can_ be deallocated from a different thread than the one that create
 Consumers must ensure a handle is not used again after it has been deallocated.
 */
 #[repr(transparent)]
-pub struct HandleOwned<T: ?Sized>(*mut ThreadBound<T>);
+pub struct HandleExclusive<T: ?Sized>(*mut ThreadBound<T>);
 
-unsafe_impl!("The handle is semantically `&mut T`" => impl<T: ?Sized> Send for HandleOwned<T> where for<'a> &'a mut T: Send {});
-unsafe_impl!("The handle uses `ThreadBound` for synchronization" => impl<T: ?Sized> Sync for HandleOwned<T> where ThreadBound<T>: Sync {});
+unsafe_impl!("The handle is semantically `&mut T`" => impl<T: ?Sized> Send for HandleExclusive<T> where for<'a> &'a mut T: Send {});
+unsafe_impl!("The handle uses `ThreadBound` for synchronization" => impl<T: ?Sized> Sync for HandleExclusive<T> where ThreadBound<T>: Sync {});
 
-impl<T: ?Sized + RefUnwindSafe> UnwindSafe for HandleOwned<T> {}
+impl<T: ?Sized + RefUnwindSafe> UnwindSafe for HandleExclusive<T> {}
 
-impl<T: ?Sized> HandleOwned<T> {
+impl<T: ?Sized> HandleExclusive<T> {
     pub(super) fn as_ptr(&self) -> *mut ThreadBound<T> {
         self.0
     }
 }
 
-impl<T> HandleOwned<T>
+impl<T> HandleExclusive<T>
 where
-    HandleOwned<T>: Send,
+    HandleExclusive<T>: Send,
 {
     pub(super) fn alloc(value: T) -> Self
     where
         T: 'static,
     {
         let v = Box::new(ThreadBound::new(value));
-        HandleOwned(Box::into_raw(v))
+        HandleExclusive(Box::into_raw(v))
     }
 
     unsafe_fn!("There are no other live references and the handle won't be used again" =>
@@ -132,9 +132,9 @@ not _technically_ needed here (the `alloc` method protects us)
 so we can catch ourselves using data in the handles that doesn't
 satisfy their safety requirements
 */
-impl<T: ?Sized> Deref for HandleOwned<T>
+impl<T: ?Sized> Deref for HandleExclusive<T>
 where
-    HandleOwned<T>: Send,
+    HandleExclusive<T>: Send,
 {
     type Target = T;
 
@@ -149,9 +149,9 @@ not _technically_ needed here (the `alloc` method protects us)
 so we can catch ourselves using data in the handles that doesn't
 satisfy their safety requirements
 */
-impl<T: ?Sized> DerefMut for HandleOwned<T>
+impl<T: ?Sized> DerefMut for HandleExclusive<T>
 where
-    HandleOwned<T>: Send,
+    HandleExclusive<T>: Send,
 {
     fn deref_mut(&mut self) -> &mut T {
         unsafe_block!("We own the interior value" => { &mut **self.0 })
