@@ -29,7 +29,7 @@ impl<T: ?Sized> IsNull for *mut T {
     }
 }
 
-impl<T: ?Sized> IsNull for super::HandleOwned<T> {
+impl<T: ?Sized> IsNull for super::HandleExclusive<T> {
     fn is_null(&self) -> bool {
         self.as_ptr().is_null()
     }

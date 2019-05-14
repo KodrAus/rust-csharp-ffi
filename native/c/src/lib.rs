@@ -58,21 +58,21 @@ pub struct DbReader {
     inner: thread_bound::DeferredCleanup<store::reader::Reader>,
 }
 
-pub type DbReaderHandle = HandleOwned<DbReader>;
+pub type DbReaderHandle = HandleExclusive<DbReader>;
 
 #[repr(C)]
 pub struct DbWriter {
     inner: store::writer::Writer,
 }
 
-pub type DbWriterHandle = HandleOwned<DbWriter>;
+pub type DbWriterHandle = HandleExclusive<DbWriter>;
 
 #[repr(C)]
 pub struct DbDeleter {
     inner: store::deleter::Deleter,
 }
 
-pub type DbDeleterHandle = HandleOwned<DbDeleter>;
+pub type DbDeleterHandle = HandleExclusive<DbDeleter>;
 
 ffi_no_catch! {
     fn db_last_result(
