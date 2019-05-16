@@ -105,18 +105,51 @@ ffi_no_catch! {
     }
 }
 
+/*
+The FFI macro will check input arguments for null. That means we don't need to check each raw
+pointer ourselves.
+
+The FFI functions declared here follow a particular pattern:
+
+```rust
+pub fn db_fn(slice_ptr: *const u8, slice_len: size_t) -> DbResult {
+    let call = |slice: &[u8]| {
+        // The body of the function
+    };
+
+    // Dereference input pointers
+    let slice = unsafe_block!("Safe because..." => slice::from_raw_parts(slice_ptr, slice_len));
+
+    // Call the body of our method with the safe reference
+    call(slice)
+}
+```
+
+The reason we separate the conversion from raw pointers into safe references
+from their actual usage is to make sure the lifetime associated with that reference isn't _dangling_.
+When you call something like `slice::from_raw_parts`, Rust will coerce the
+resulting lifetime into whatever works, that might mean treating it as `'static`,
+which is definitely not what we want! By passing references to a closure we
+constraint that dangling lifetime to the opposite of `'static`, which is `for<'a>`
+(a lifetime that must be valid for even the shortest possible lifetime).
+That way there's no chance of accidentally leaking an argument passed through FFI.
+*/
 ffi! {
     fn db_store_open(path: *const u8, path_len: size_t, store: Out<DbStoreHandle>) -> DbResult {
+        let open = |path: &str| {
+            let handle = DbStoreHandle::alloc(DbStore {
+                inner: store::Store::open(path)?,
+            });
+
+            unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => *store = handle);
+
+            DbResult::Ok
+        };
+
         let path_slice = unsafe_block!("The path lives as long as `db_store_open` and the length is within the path" => slice::from_raw_parts(path, path_len));
         let path = str::from_utf8(path_slice)?;
 
-        let handle = DbStoreHandle::alloc(DbStore {
-            inner: store::Store::open(path)?,
-        });
-
-        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => *store = handle);
-
-        DbResult::Ok
+        open(path)
     }
 
     fn db_store_close(store: DbStoreHandle) -> DbResult {
@@ -147,42 +180,45 @@ ffi! {
         value_buf_len: size_t,
         actual_value_len: Out<size_t>
     ) -> DbResult {
-        let buf = unsafe_block!("The buffer lives as long as `db_read_next` and the length is within the buffer" => slice::from_raw_parts_mut(value_buf, value_buf_len));
-        let reader = &mut *reader;
+        let read = |reader: &mut DbReader, buf: &mut [u8]| {
+            'read_event: loop {
+                let read_result = reader.inner.with_current(|mut current| {
+                    let key = unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => &mut *key);
+                    let actual_value_len = unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => &mut *actual_value_len);
 
-        'read_event: loop {
-            let read_result = reader.inner.with_current(|mut current| {
-                let key = unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => &mut *key);
-                let actual_value_len = unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => &mut *actual_value_len);
+                    read::into_fixed_buffer(&mut current, buf, key, actual_value_len)
+                });
 
-                read::into_fixed_buffer(&mut current, buf, key, actual_value_len)
-            });
+                match read_result {
+                    // If the result is ok then we're done with this event
+                    // Fetch the next one
+                    Some(DbResult::Ok) => {
+                        reader.inner.move_next()?;
 
-            match read_result {
-                // If the result is ok then we're done with this event
-                // Fetch the next one
-                Some(DbResult::Ok) => {
-                    reader.inner.move_next()?;
-
-                    return DbResult::Ok;
-                },
-                // If the result is anything but `Ok` then return.
-                // This probably means the caller-supplied buffer was
-                // too small
-                Some(result) => return result,
-                // If there is no result then we don't have an event.
-                // Fetch the next event and recurse.
-                // This probably means we're reading the first event,
-                // or have reached the end.
-                None => {
-                    if reader.inner.move_next()? {
-                        continue 'read_event;
-                    } else {
-                        return DbResult::Done;
+                        return DbResult::Ok;
+                    },
+                    // If the result is anything but `Ok` then return.
+                    // This probably means the caller-supplied buffer was
+                    // too small
+                    Some(result) => return result,
+                    // If there is no result then we don't have an event.
+                    // Fetch the next event and recurse.
+                    // This probably means we're reading the first event,
+                    // or have reached the end.
+                    None => {
+                        if reader.inner.move_next()? {
+                            continue 'read_event;
+                        } else {
+                            return DbResult::Done;
+                        }
                     }
                 }
             }
-        }
+        };
+
+        let buf = unsafe_block!("The buffer lives as long as `db_read_next` and the length is within the buffer" => slice::from_raw_parts_mut(value_buf, value_buf_len));
+        
+        read(&mut *reader, buf)
     }
 
     fn db_read_end(reader: DbReaderHandle) -> DbResult {
@@ -212,18 +248,21 @@ ffi! {
         value: *const u8,
         value_len: size_t
     ) -> DbResult {
-        let key = unsafe_block!("The key pointer lives as long as `db_write_set` and points to valid data" => &*key);
+        let set = |writer: &mut DbWriter, key: &DbKey, value_slice: &[u8]| {
+            let data = Data {
+                key: data::Key::from_bytes(key.0),
+                payload: value_slice,
+            };
 
-        let value_slice = unsafe_block!("The buffer lives as long as `db_write_set` and the length is within the buffer" => slice::from_raw_parts(value, value_len));
+            writer.inner.set(data)?;
 
-        let data = Data {
-            key: data::Key::from_bytes(key.0),
-            payload: value_slice,
+            DbResult::Ok
         };
 
-        writer.inner.set(data)?;
+        let key = unsafe_block!("The key pointer lives as long as `db_write_set` and points to valid data" => &*key);
+        let value_slice = unsafe_block!("The buffer lives as long as `db_write_set` and the length is within the buffer" => slice::from_raw_parts(value, value_len));
 
-        DbResult::Ok
+        set(&mut *writer, key, value_slice)
     }
 
     fn db_write_end(writer: DbWriterHandle) -> DbResult {
@@ -251,11 +290,15 @@ ffi! {
         deleter: DbDeleterHandle,
         key: *const DbKey
     ) -> DbResult {
+        let remove = |deleter: &mut DbDeleter, key: &DbKey| {
+            deleter.inner.remove(data::Key::from_bytes(key.0))?;
+
+            DbResult::Ok
+        };
+
         let key = unsafe_block!("The key pointer lives as long as `db_delete_remove` and points to valid data" => &*key);
 
-        deleter.inner.remove(data::Key::from_bytes(key.0))?;
-
-        DbResult::Ok
+        remove(&mut *deleter, key)
     }
 
     fn db_delete_end(deleter: DbDeleterHandle) -> DbResult {
