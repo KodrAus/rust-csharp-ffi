@@ -8,7 +8,6 @@ use std::{
         RefUnwindSafe,
         UnwindSafe,
     },
-    sync::Arc,
 };
 
 use crate::{
@@ -17,7 +16,10 @@ use crate::{
         Key,
     },
     error::Error,
-    store::Store,
+    store::{
+        Store,
+        Db,
+    },
 };
 
 pub struct Reader {
@@ -27,7 +29,7 @@ pub struct Reader {
 
 impl Reader {
     pub(super) fn begin(store: &Store) -> Self {
-        let db = store.inner.db.clone();
+        let db = store.db.clone();
 
         Reader {
             iter: Iter::new(db),
@@ -69,7 +71,7 @@ rental! {
 
         #[rental]
         pub(super) struct Iter {
-            db: Arc<sled::Db>,
+            db: Db,
             iter: sled::Iter<'db>,
         }
     }
@@ -77,11 +79,8 @@ rental! {
 
 struct Iter(iter::Iter);
 
-impl UnwindSafe for Iter {}
-impl RefUnwindSafe for Iter {}
-
 impl Iter {
-    fn new(db: Arc<sled::Db>) -> Self {
+    fn new(db: Db) -> Self {
         Iter(iter::Iter::new(db, |db| db.iter()))
     }
 
@@ -104,6 +103,16 @@ impl Iter {
         }
     }
 }
+
+/*
+NOTE: Usually, just declaring a type as unwind safe like this isn't
+a great idea, especially when it contains other types you don't own.
+We do this here to keep the example moving forward.
+
+See: https://github.com/spacejam/sled/issues/662
+*/
+impl UnwindSafe for Iter {}
+impl RefUnwindSafe for Iter {}
 
 pub struct Payload(Cursor<RawPayload>);
 
