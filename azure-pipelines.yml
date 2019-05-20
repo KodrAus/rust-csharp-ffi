@@ -8,7 +8,7 @@ jobs:
   - task: UseDotNet@2
     inputs:
       packageType: sdk
-      version: 3.0.0-preview5
+      version: 3.x
       includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
   - script: |
@@ -26,7 +26,7 @@ jobs:
   - task: UseDotNet@2
     inputs:
       packageType: sdk
-      version: 3.0.0-preview5
+      version: 3.x
       includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
   - script: |
@@ -45,7 +45,7 @@ jobs:
   - task: UseDotNet@2
     inputs:
       packageType: sdk
-      version: 3.0.0-preview5
+      version: 3.x
       includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
   - script: |
