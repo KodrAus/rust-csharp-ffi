@@ -9,6 +9,7 @@ jobs:
     inputs:
       packageType: sdk
       version: 3.0.0-preview5
+      includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
   - script: |
       sudo apt-get update && sudo apt-get install -y clang-3.9 libcurl4-openssl-dev zlib1g-dev libkrb5-dev
@@ -26,6 +27,7 @@ jobs:
     inputs:
       packageType: sdk
       version: 3.0.0-preview5
+      includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
   - script: |
       curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
@@ -44,6 +46,7 @@ jobs:
     inputs:
       packageType: sdk
       version: 3.0.0-preview5
+      includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
   - script: |
       curl -sSf -o rustup-init.exe https://win.rustup.rs
