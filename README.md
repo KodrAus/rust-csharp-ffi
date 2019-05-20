@@ -72,7 +72,7 @@ The `dotnet/Dbc.targets` file is specific for this sample. It sets some MsBuild 
 
 ### Modeling the .NET runtime in Rust
 
-We model the FFI on the Rust side and owned datastructures are allocated in Rust's heap.
+We model the FFI on the Rust side and owned data structures are allocated in Rust's heap.
 
 Handles in the Rust C ABI try to model the way C# _can_ interact with them rather than just how we _expect_ it to. Some considerations are:
 

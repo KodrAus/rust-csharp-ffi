@@ -13,19 +13,11 @@ pub mod deleter;
 pub mod reader;
 pub mod writer;
 
-#[derive(Clone)]
-struct Inner {
-    db: Arc<sled::Db>,
-}
-
-impl UnwindSafe for Inner {}
-impl RefUnwindSafe for Inner {}
-
 /**
 A database instance.
 */
 pub struct Store {
-    inner: Inner,
+    db: Db,
 }
 
 impl Store {
@@ -33,12 +25,12 @@ impl Store {
         let db = sled::Db::start_default(path).map_err(Error::fail)?;
 
         Ok(Store {
-            inner: Inner { db: Arc::new(db) },
+            db: Db::new(db),
         })
     }
 
     pub fn close(&mut self) -> Result<(), Error> {
-        self.inner.db.flush().map_err(Error::fail)?;
+        self.db.flush().map_err(Error::fail)?;
 
         Ok(())
     }
@@ -55,3 +47,15 @@ impl Store {
         Ok(deleter::Deleter::begin(self))
     }
 }
+
+type Db = Arc<sled::Db>;
+
+/*
+NOTE: Usually, just declaring a type as unwind safe like this isn't
+a great idea, especially when it contains other types you don't own.
+We do this here to keep the example moving forward.
+
+See: https://github.com/spacejam/sled/issues/662
+*/
+impl UnwindSafe for Store {}
+impl RefUnwindSafe for Store {}
