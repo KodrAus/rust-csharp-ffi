@@ -7,7 +7,7 @@ namespace Db.Api
 {
     class DataModule : Module
     {
-        readonly string _dataPath;
+        private readonly string _dataPath;
 
         public DataModule(string dataPath)
         {

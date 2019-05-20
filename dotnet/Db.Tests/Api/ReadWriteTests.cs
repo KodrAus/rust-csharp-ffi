@@ -1,8 +1,6 @@
-using System;
 using System.Buffers;
 using System.Linq;
 using Db.Tests.Support;
-using Db.Storage;
 using Db.Api.Storage;
 using Xunit;
 
@@ -15,8 +13,8 @@ namespace Db.Tests.Api
         {
             var events = new[]
             {
-                new Data(Some.KeyWith(3).ToString(), new { title = "Data 1" }),
-                new Data(Some.KeyWith(17).ToString(), new { title = "Data 2" })
+                new Data(Some.KeyWith(3).ToString(), new {title = "Data 1"}),
+                new Data(Some.KeyWith(17).ToString(), new {title = "Data 2"})
             };
 
             using (var tempStore = new TempStore())
@@ -37,7 +35,7 @@ namespace Db.Tests.Api
                     {
                         var expected = events.Single(evt => read.Key == evt.Key);
 
-                        Assert.Equal((string)read.Value.title, (string)expected.DynamicValue().title);
+                        Assert.Equal((string) read.Value.title, (string) expected.DynamicValue().title);
                     }
                 }
             }

@@ -1,5 +1,4 @@
 using System;
-using System.Security.Permissions;
 using System.Text;
 
 namespace Db.Storage.Native

@@ -1,5 +1,4 @@
 using System;
-using System.Security.Permissions;
 using System.Runtime.CompilerServices;
 using Db.Storage.Native;
 
@@ -22,7 +21,7 @@ namespace Db.Storage
             {
                 var rawKey = key.Value;
                 var keyPtr = Unsafe.AsPointer(ref rawKey);
-                
+
                 Bindings.db_delete_remove(_handle, (IntPtr) keyPtr);
             }
         }
@@ -35,16 +34,7 @@ namespace Db.Storage
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        void Dispose(bool disposing)
-        {
-            if (!_handle.IsInvalid)
-            {
-                _handle.Dispose();
-            }
+            if (!_handle.IsInvalid) _handle.Dispose();
         }
     }
 }

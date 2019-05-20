@@ -1,5 +1,4 @@
 using System;
-using System.Security.Permissions;
 using System.Runtime.CompilerServices;
 using Db.Storage.Native;
 
@@ -38,16 +37,7 @@ namespace Db.Storage
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        void Dispose(bool disposing)
-        {
-            if (!_handle.IsInvalid)
-            {
-                _handle.Dispose();
-            }
+            if (!_handle.IsInvalid) _handle.Dispose();
         }
     }
 }

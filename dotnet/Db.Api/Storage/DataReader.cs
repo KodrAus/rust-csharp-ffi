@@ -25,18 +25,14 @@ namespace Db.Api.Storage
 
         public IEnumerable<Data> Data()
         {
-            int requiredSize = 1024;
+            var requiredSize = 1024;
             while (true)
-            {
                 using (var readInto = _pool.Rent(requiredSize))
                 {
                     var read = _reader.TryReadNext(readInto.Memory.Span);
 
                     // If the read is done then return
-                    if (read.IsDone)
-                    {
-                        yield break;
-                    }
+                    if (read.IsDone) yield break;
 
                     // If the buffer is too small then resize and try again
                     if (read.IsBufferTooSmall(out var required))
@@ -48,9 +44,9 @@ namespace Db.Api.Storage
                     // Get the data for the read event
                     read.GetData(out var key, out var payload);
 
-                    yield return new Data(key.ToString(), JsonConvert.DeserializeObject(Encoding.UTF8.GetString(payload)));
+                    yield return new Data(key.ToString(),
+                        JsonConvert.DeserializeObject(Encoding.UTF8.GetString(payload)));
                 }
-            }
         }
     }
 }

@@ -8,12 +8,12 @@ namespace Db.Tests.Integration.Support
 {
     class ServerProcess : IDisposable
     {
-        readonly ManualResetEvent _errorComplete = new ManualResetEvent(false);
-        readonly StringWriter _output = new StringWriter();
-        readonly ManualResetEvent _outputComplete = new ManualResetEvent(false);
-        readonly Process _process;
+        private readonly ManualResetEvent _errorComplete = new ManualResetEvent(false);
+        private readonly StringWriter _output = new StringWriter();
+        private readonly ManualResetEvent _outputComplete = new ManualResetEvent(false);
+        private readonly Process _process;
 
-        readonly object _sync = new object();
+        private readonly object _sync = new object();
 
         public ServerProcess(string binPath, string listenUrl, string dataPath)
         {
@@ -77,7 +77,7 @@ namespace Db.Tests.Integration.Support
             }
         }
 
-        void WriteOutput(string line)
+        private void WriteOutput(string line)
         {
             lock (_sync)
             {

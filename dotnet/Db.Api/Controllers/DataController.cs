@@ -25,7 +25,6 @@ namespace Db.Api.Controllers
 
                 return new JsonResult(values);
             }
-            
         }
 
         [HttpPost]

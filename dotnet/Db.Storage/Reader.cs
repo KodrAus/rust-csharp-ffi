@@ -1,5 +1,4 @@
 using System;
-using System.Security.Permissions;
 using Db.Storage.Native;
 
 namespace Db.Storage
@@ -13,7 +12,6 @@ namespace Db.Storage
             _handle = handle ?? throw new ArgumentNullException(nameof(handle));
         }
 
-        [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
         public ReadResult TryReadNext(Span<byte> buffer)
         {
             EnsureOpen();
@@ -46,16 +44,7 @@ namespace Db.Storage
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        void Dispose(bool disposing)
-        {
-            if (!_handle.IsInvalid)
-            {
-                _handle.Dispose();
-            }
+            if (!_handle.IsInvalid) _handle.Dispose();
         }
     }
 }

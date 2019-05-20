@@ -1,8 +1,6 @@
-using System;
 using System.Buffers;
 using System.Linq;
 using Db.Tests.Support;
-using Db.Storage;
 using Db.Api.Storage;
 using Xunit;
 
@@ -17,8 +15,8 @@ namespace Db.Tests.Api
 
             var events = new[]
             {
-                new Data(deletedKey, new { title = "Data 1" }),
-                new Data(Some.KeyWith(17).ToString(), new { title = "Data 2" })
+                new Data(deletedKey, new {title = "Data 1"}),
+                new Data(Some.KeyWith(17).ToString(), new {title = "Data 2"})
             };
 
             using (var tempStore = new TempStore())
@@ -28,7 +26,7 @@ namespace Db.Tests.Api
                 {
                     foreach (var data in events) writer.Set(data);
                 }
-                
+
                 using (var deleter = store.BeginDelete())
                 {
                     deleter.Remove(deletedKey);
@@ -38,8 +36,8 @@ namespace Db.Tests.Api
                 {
                     var readData = reader.Data().ToList();
 
-                    Assert.Equal(1, readData.Count());
-                    Assert.False(readData.Any(data => data.Key == deletedKey));
+                    Assert.Single(readData);
+                    Assert.DoesNotContain(readData, data => data.Key == deletedKey);
                 }
             }
         }

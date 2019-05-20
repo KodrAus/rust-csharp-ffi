@@ -6,9 +6,9 @@ namespace Db.Tests.Integration.Support
 {
     sealed class TestCase
     {
-        readonly Client _client;
-        readonly ServerProcess _server;
-        readonly ITestCase _test;
+        private readonly Client _client;
+        private readonly ServerProcess _server;
+        private readonly ITestCase _test;
 
         public TestCase(ITestCase test, ServerProcess server, Client client)
         {

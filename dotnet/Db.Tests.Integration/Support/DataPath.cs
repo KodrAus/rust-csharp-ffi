@@ -1,12 +1,11 @@
 using System;
 using System.IO;
-using System.Linq;
 
 namespace Db.Tests.Integration.Support
 {
     public class DataPath : IDisposable
     {
-        readonly string _dir;
+        private readonly string _dir;
 
         public DataPath()
         {
