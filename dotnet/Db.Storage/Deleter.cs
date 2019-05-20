@@ -14,7 +14,6 @@ namespace Db.Storage
             _handle = handle ?? throw new ArgumentNullException(nameof(handle));
         }
 
-        [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
         public void Remove(Key key)
         {
             EnsureOpen();

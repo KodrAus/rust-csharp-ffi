@@ -41,7 +41,7 @@ namespace Db.Storage.Native
             return MaybeCheck(_db_store_open(path, pathLen, out store), check);
         }
 
-        [DllImport(NativeLibrary, EntryPoint = "db_store_close", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        [DllImport(NativeLibrary, EntryPoint = "db_store_close", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         private static extern DbResult _db_store_close(IntPtr store);
 
         public static DbResult db_store_close(IntPtr store, bool check = true)
@@ -76,7 +76,7 @@ namespace Db.Storage.Native
             return MaybeCheck(_db_read_next(reader, out key, valueBuf, valueBufLen, out actualValueLen), check);
         }
 
-        [DllImport(NativeLibrary, EntryPoint = "db_read_end", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        [DllImport(NativeLibrary, EntryPoint = "db_read_end", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         private static extern DbResult _db_read_end(IntPtr reader);
 
         public static DbResult db_read_end(IntPtr reader, bool check = true)
@@ -109,7 +109,7 @@ namespace Db.Storage.Native
             return MaybeCheck(_db_write_set(writer, key, value, valueLen), check);
         }
 
-        [DllImport(NativeLibrary, EntryPoint = "db_write_end", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        [DllImport(NativeLibrary, EntryPoint = "db_write_end", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         private static extern DbResult _db_write_end(IntPtr writer);
 
         public static DbResult db_write_end(IntPtr writer, bool check = true)
@@ -138,7 +138,7 @@ namespace Db.Storage.Native
             return MaybeCheck(_db_delete_remove(deleter, key), check);
         }
 
-        [DllImport(NativeLibrary, EntryPoint = "db_delete_end", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        [DllImport(NativeLibrary, EntryPoint = "db_delete_end", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         private static extern DbResult _db_delete_end(IntPtr deleter);
 
         public static DbResult db_delete_end(IntPtr deleter, bool check = true)
