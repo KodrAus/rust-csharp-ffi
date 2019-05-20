@@ -1,4 +1,5 @@
 using System;
+using System.Security.Permissions;
 using System.Runtime.CompilerServices;
 using Db.Storage.Native;
 
@@ -13,11 +14,7 @@ namespace Db.Storage
             _handle = handle ?? throw new ArgumentNullException(nameof(handle));
         }
 
-        public void Dispose()
-        {
-            _handle.Close();
-        }
-
+        [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
         public void Remove(Key key)
         {
             EnsureOpen();
@@ -35,6 +32,20 @@ namespace Db.Storage
         {
             if (_handle.IsClosed)
                 throw new ObjectDisposedException(nameof(Deleter), "The deleter has been disposed.");
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        void Dispose(bool disposing)
+        {
+            if (!_handle.IsInvalid)
+            {
+                _handle.Dispose();
+            }
         }
     }
 }

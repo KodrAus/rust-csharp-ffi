@@ -1,4 +1,5 @@
 using System;
+using System.Security.Permissions;
 using System.Runtime.CompilerServices;
 using Db.Storage.Native;
 
@@ -13,11 +14,6 @@ namespace Db.Storage
             _handle = handle ?? throw new ArgumentNullException(nameof(handle));
         }
 
-        public void Dispose()
-        {
-            _handle.Close();
-        }
-
         public void Set(Key key, Span<byte> value)
         {
             EnsureOpen();
@@ -26,8 +22,8 @@ namespace Db.Storage
             {
                 var rawKey = key.Value;
                 var keyPtr = Unsafe.AsPointer(ref rawKey);
-                
-                fixed (void* valuePtr = value)
+
+                fixed (byte* valuePtr = value)
                 {
                     Bindings.db_write_set(_handle, (IntPtr) keyPtr, (IntPtr) valuePtr, (UIntPtr) value.Length);
                 }
@@ -38,6 +34,20 @@ namespace Db.Storage
         {
             if (_handle.IsClosed)
                 throw new ObjectDisposedException(nameof(Writer), "The writer has been disposed.");
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        void Dispose(bool disposing)
+        {
+            if (!_handle.IsInvalid)
+            {
+                _handle.Dispose();
+            }
         }
     }
 }

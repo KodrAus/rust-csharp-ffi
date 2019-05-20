@@ -13,7 +13,6 @@ namespace Db.Storage.Native
 
         public override bool IsInvalid => handle == IntPtr.Zero;
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
             if (handle == IntPtr.Zero) return true;
