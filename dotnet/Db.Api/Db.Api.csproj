@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>8.0</LangVersion>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
@@ -28,7 +28,6 @@
   <!-- Use the source package for `System.Text.Json` -->
   <PropertyGroup>
     <NoWarn>3021</NoWarn>
-    <LangVersion>preview</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
