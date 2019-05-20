@@ -61,7 +61,7 @@ namespace Db.Storage
             {
                 var localPtr = Unsafe.AsPointer(ref local);
 
-                hi = Encoding.ASCII.GetString((byte*)localPtr, 8);
+                hi = Encoding.ASCII.GetString((byte*) localPtr, 8);
                 lo = Unsafe.ReadUnaligned<ulong>(Unsafe.Add<ulong>(localPtr, 1));
             }
         }
@@ -78,8 +78,8 @@ namespace Db.Storage
 
         public bool Equals(Key other)
         {
-            var local = this._key;
-            
+            var local = _key;
+
             unsafe
             {
                 var localPtr = Unsafe.AsPointer(ref local);
@@ -108,7 +108,7 @@ namespace Db.Storage
 
                 var hi = Unsafe.ReadUnaligned<ulong>(localPtr);
                 var lo = Unsafe.ReadUnaligned<ulong>(Unsafe.Add<ulong>(localPtr, 1));
-                
+
                 return (hi.GetHashCode() * 397) ^ lo.GetHashCode();
             }
         }

@@ -1,12 +1,11 @@
 using Autofac;
 using Db.Tests.Integration.Api;
-using Db.Tests.Integration.Support;
 
 namespace Db.Tests.Integration.Support
 {
     public class TestCaseRunnerModule : Module
     {
-        readonly string _binPath;
+        private readonly string _binPath;
 
         public TestCaseRunnerModule(string binPath)
         {

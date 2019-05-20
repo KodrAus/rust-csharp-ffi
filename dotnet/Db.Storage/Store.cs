@@ -11,11 +11,6 @@ namespace Db.Storage
 
         public bool IsOpen => !_handle.IsClosed;
 
-        public void Dispose()
-        {
-            _handle.Close();
-        }
-
         public static Store Open(string path)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
@@ -23,9 +18,9 @@ namespace Db.Storage
 
             unsafe
             {
-                fixed (void* p = pathUtf8)
+                fixed (byte* pathUtf8Ptr = pathUtf8)
                 {
-                    Bindings.db_store_open((IntPtr) p, (UIntPtr) pathUtf8.Length, out var handle);
+                    Bindings.db_store_open((IntPtr) pathUtf8Ptr, (UIntPtr) pathUtf8.Length, out var handle);
 
                     return new Store
                     {
@@ -69,6 +64,11 @@ namespace Db.Storage
         {
             if (_handle.IsClosed)
                 throw new ObjectDisposedException(nameof(Store), $"The store at `{_path}` has been disposed.");
+        }
+
+        public void Dispose()
+        {
+            if (!_handle.IsInvalid) _handle.Dispose();
         }
     }
 }

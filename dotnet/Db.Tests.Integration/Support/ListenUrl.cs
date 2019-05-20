@@ -4,17 +4,17 @@ namespace Db.Tests.Integration.Support
 {
     class ListenUrl
     {
-        static int NextPort = 50000;
-        readonly string _value;
+        private static int _nextPort = 50000;
+        private readonly string _value;
 
         public ListenUrl()
         {
             _value = $"http://localhost:{GetNextPort()}";
         }
 
-        static int GetNextPort()
+        private static int GetNextPort()
         {
-            return Interlocked.Increment(ref NextPort);
+            return Interlocked.Increment(ref _nextPort);
         }
 
         public static implicit operator string(ListenUrl @this)

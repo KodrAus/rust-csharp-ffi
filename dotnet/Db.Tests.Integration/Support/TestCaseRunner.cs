@@ -4,13 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac.Features.OwnedInstances;
-using Db.Tests.Integration.Support;
 
 namespace Db.Tests.Integration.Support
 {
     class TestCaseRunner
     {
-        readonly IEnumerable<Func<Owned<TestCase>>> _tests;
+        private readonly IEnumerable<Func<Owned<TestCase>>> _tests;
 
         public TestCaseRunner(IEnumerable<Func<Owned<TestCase>>> tests)
         {

@@ -5,7 +5,7 @@ namespace Db.Tests.Integration
 {
     class Program
     {
-        static int Main(string[] args)
+        private static int Main(string[] args)
         {
             var builder = new ContainerBuilder();
             builder.RegisterModule(new TestCaseRunnerModule(args[0]));

@@ -9,8 +9,8 @@ namespace Db.Tests.Integration.Api
 {
     class Client : IDisposable
     {
-        readonly Uri _baseUri;
-        readonly HttpClient _client;
+        private readonly Uri _baseUri;
+        private readonly HttpClient _client;
 
         public Client(string baseUri)
         {

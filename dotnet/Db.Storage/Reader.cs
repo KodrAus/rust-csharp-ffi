@@ -12,18 +12,13 @@ namespace Db.Storage
             _handle = handle ?? throw new ArgumentNullException(nameof(handle));
         }
 
-        public void Dispose()
-        {
-            _handle.Close();
-        }
-
         public ReadResult TryReadNext(Span<byte> buffer)
         {
             EnsureOpen();
 
             unsafe
             {
-                fixed (byte* bufferPtr = &buffer[0])
+                fixed (byte* bufferPtr = buffer)
                 {
                     var result = Bindings.db_read_next(
                         _handle,
@@ -45,6 +40,11 @@ namespace Db.Storage
         {
             if (_handle.IsClosed)
                 throw new ObjectDisposedException(nameof(Reader), "The reader has been disposed.");
+        }
+
+        public void Dispose()
+        {
+            if (!_handle.IsInvalid) _handle.Dispose();
         }
     }
 }
