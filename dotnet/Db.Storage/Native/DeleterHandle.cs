@@ -20,7 +20,8 @@ namespace Db.Storage.Native
             var h = handle;
             handle = IntPtr.Zero;
 
-            return Bindings.db_delete_end(h, false).IsSuccess();
+            Bindings.db_delete_end(h, false);
+            return true;
         }
     }
 }
