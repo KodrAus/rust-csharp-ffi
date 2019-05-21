@@ -9,7 +9,7 @@ It can be run as a typical .NET application, or it can be compiled ahead of time
 This project requires:
 
 - A recent [Rust nightly toolchain](https://rustup.rs).
-- A [.NET Core SDK](https://dotnet.microsoft.com/download) supporting `netcoreapp2.2`.
+- A [.NET Core SDK](https://dotnet.microsoft.com/download) supporting `netcoreapp3.0`.
 
 Building with CoreRT additionally requires a native C++ toolchain. See [the list of CoreRT prerequisites](https://github.com/dotnet/corert/blob/master/samples/prerequisites.md).
 
@@ -31,11 +31,11 @@ Passing the `AotBuild` property when publishing will use `Microsoft.DotNet.ILCom
 $ cd dotnet/Db.Api
 
 $ dotnet publish `
-    -f netcoreapp2.2 `
+    -f netcoreapp3.0 `
     -r $DOTNET_RID `
     /p:AotBuild=true
 
-$ ./bin/Debug/netcoreapp2.2/$DOTNET_RID/publish/Db.Api
+$ ./bin/Debug/netcoreapp3.0/$DOTNET_RID/publish/Db.Api
 ```
 
 where `$DOTNET_RID` is a [runtime identifier](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog).

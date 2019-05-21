@@ -1,6 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿using System.Text.Json;
+using System.Threading.Tasks;
+using Db.Api.Mvc;
 using Db.Api.Storage;
+using Db.Storage;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Db.Api.Controllers
@@ -9,46 +12,63 @@ namespace Db.Api.Controllers
     [ApiController]
     public class DataController : ControllerBase
     {
-        private readonly Lazy<DataStore> _store;
+        private readonly DataStore _store;
 
-        public DataController(Lazy<DataStore> store)
+        public DataController(DataStore store)
         {
             _store = store;
         }
 
         [HttpGet]
-        public JsonResult Get()
+        public ActionResult Get()
         {
-            using (var reader = _store.Value.BeginRead())
-            {
-                var values = reader.Data().ToList();
+            // NOTE: We need this for now since `Utf8JsonWriter` will
+            // unconditionally issue a synchronous `Flush`, even if there's
+            // no data. Once we can call `DisposeAsync` this can go away
+            AllowSynchronousIO();
 
-                return new JsonResult(values);
-            }
+            var outerReader = _store.BeginRead();
+            return new JsonStreamResult(async body =>
+            {
+                using var reader = outerReader;
+                using var writer = new Utf8JsonWriter(body);
+
+                writer.WriteStartArray();
+                foreach (var outerData in reader.Data())
+                {
+                    using var data = outerData;
+                    data.WriteAsValue(writer);
+                }
+
+                writer.WriteEndArray();
+
+                await writer.FlushAsync(HttpContext.RequestAborted);
+            });
         }
 
         [HttpPost]
         [Route("{key}")]
-        public ActionResult Set(string key, [FromBody] object value)
+        public ActionResult Set(string key)
         {
-            using (var writer = _store.Value.BeginWrite())
+            // NOTE: This is probably a terrible idea, but right now async endpoints are hitting
+            // an assertion in CoreRT (GetRuntimeInterfaceMap() is not supported on this runtime.)
+            // So we defer the actual async handling to later
+            return new DeferredExecutionResult(async actionContext =>
             {
-                writer.Set(new Data(key, value));
+                var httpContext = actionContext.HttpContext;
 
-                return Ok();
-            }
+                using var doc = new Data(new Key(key),
+                    await Utf8JsonBody.ReadToEndAsync(httpContext.Request.Body, httpContext.RequestAborted));
+                using var write = _store.BeginWrite();
+
+                write.Set(doc);
+            });
         }
 
-        [HttpDelete]
-        [Route("{key}")]
-        public ActionResult Remove(string key)
+        private void AllowSynchronousIO()
         {
-            using (var deleter = _store.Value.BeginDelete())
-            {
-                deleter.Remove(key);
-
-                return Ok();
-            }
+            var syncIoFeature = HttpContext.Features.Get<IHttpBodyControlFeature>();
+            if (syncIoFeature != null) syncIoFeature.AllowSynchronousIO = true;
         }
     }
 }

@@ -18,6 +18,7 @@ namespace Db.Api.Storage
         public void Dispose()
         {
             _store.Dispose();
+            _pool.Dispose();
         }
 
         public DataReader BeginRead()

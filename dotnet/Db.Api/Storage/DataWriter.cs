@@ -1,7 +1,5 @@
 using System;
-using System.Text;
 using Db.Storage;
-using Newtonsoft.Json;
 
 namespace Db.Api.Storage
 {
@@ -17,16 +15,12 @@ namespace Db.Api.Storage
         public void Dispose()
         {
             _writer.Dispose();
+            // The memory pool is borrowed so we don't dispose it
         }
 
         public void Set(Data data)
         {
-            var rawKey = Key.FromString(data.Key);
-
-            var json = JsonConvert.SerializeObject(data.Value);
-            var jsonBytes = Encoding.UTF8.GetBytes(json);
-
-            _writer.Set(rawKey, new Span<byte>(jsonBytes));
+            _writer.Set(data.Key, data.RawValue.Span);
         }
     }
 }

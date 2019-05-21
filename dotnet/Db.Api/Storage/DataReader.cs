@@ -1,9 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Text;
 using Db.Storage;
-using Newtonsoft.Json;
 
 namespace Db.Api.Storage
 {
@@ -21,32 +19,48 @@ namespace Db.Api.Storage
         public void Dispose()
         {
             _reader.Dispose();
+            // The memory pool is borrowed so we don't dispose it
         }
 
         public IEnumerable<Data> Data()
         {
             var requiredSize = 1024;
             while (true)
-                using (var readInto = _pool.Rent(requiredSize))
+            {
+                var readInto = _pool.Rent(requiredSize);
+                ReadResult read;
+
+                try
                 {
-                    var read = _reader.TryReadNext(readInto.Memory.Span);
-
-                    // If the read is done then return
-                    if (read.IsDone) yield break;
-
-                    // If the buffer is too small then resize and try again
-                    if (read.IsBufferTooSmall(out var required))
-                    {
-                        requiredSize = required;
-                        continue;
-                    }
-
-                    // Get the data for the read event
-                    read.GetData(out var key, out var payload);
-
-                    yield return new Data(key.ToString(),
-                        JsonConvert.DeserializeObject(Encoding.UTF8.GetString(payload)));
+                    read = _reader.TryReadNext(readInto.Memory.Span);
                 }
+                catch
+                {
+                    readInto.Dispose();
+                    throw;
+                }
+
+                // If the read is done then return
+                if (read.IsDone)
+                {
+                    readInto.Dispose();
+                    yield break;
+                }
+
+                // If the buffer is too small then resize and try again
+                if (read.IsBufferTooSmall(out var required))
+                {
+                    requiredSize = required;
+                    readInto.Dispose();
+                    continue;
+                }
+
+                // If we get this far then we've read an event
+                // Ownership of the rented buffer is transferred
+                // to the returned `Data`
+                read.GetData(out var key, out var payload);
+                yield return new Data(key, readInto, payload.Range);
+            }
         }
     }
 }

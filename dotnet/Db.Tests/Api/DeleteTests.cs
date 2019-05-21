@@ -1,7 +1,9 @@
 using System.Buffers;
 using System.Linq;
+using System.Text;
 using Db.Tests.Support;
 using Db.Api.Storage;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace Db.Tests.Api
@@ -11,35 +13,46 @@ namespace Db.Tests.Api
         [Fact]
         public void DeletedDataCannotBeRead()
         {
-            var deletedKey = Some.KeyWith(3).ToString();
+            var deletedKey = Some.KeyWith(17);
 
             var events = new[]
             {
-                new Data(deletedKey, new {title = "Data 1"}),
-                new Data(Some.KeyWith(17).ToString(), new {title = "Data 2"})
+                new
+                {
+                    key = Some.KeyWith(3),
+                    value = new {title = "Data 1"}
+                },
+                new
+                {
+                    key = deletedKey,
+                    value = new {title = "Data 2"}
+                }
             };
 
-            using (var tempStore = new TempStore())
-            using (var store = new DataStore(MemoryPool<byte>.Shared, tempStore.Store))
+            using var tempStore = new TempStore();
+            using var store = new DataStore(MemoryPool<byte>.Shared, tempStore.Store);
+
+            using (var writer = store.BeginWrite())
             {
-                using (var writer = store.BeginWrite())
+                foreach (var data in events)
                 {
-                    foreach (var data in events) writer.Set(data);
-                }
+                    var json = JsonConvert.SerializeObject(data.value);
+                    var utf8Json = Encoding.UTF8.GetBytes(json);
 
-                using (var deleter = store.BeginDelete())
-                {
-                    deleter.Remove(deletedKey);
-                }
-
-                using (var reader = store.BeginRead())
-                {
-                    var readData = reader.Data().ToList();
-
-                    Assert.Single(readData);
-                    Assert.DoesNotContain(readData, data => data.Key == deletedKey);
+                    writer.Set(new Data(data.key, new OwnedArray(utf8Json)));
                 }
             }
+
+            using (var deleter = store.BeginDelete())
+            {
+                deleter.Remove(deletedKey);
+            }
+
+            using var reader = store.BeginRead();
+            var readData = reader.Data().ToList();
+
+            Assert.Single(readData);
+            Assert.DoesNotContain(readData, data => data.Key == deletedKey);
         }
     }
 }
