@@ -1,6 +1,9 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Serilog;
+using Serilog.Events;
 
 namespace Db.Api
 {
@@ -8,7 +11,23 @@ namespace Db.Api
     {
         public static void Main(string[] args)
         {
-            CreateWebHostBuilder(args).Build().Run();
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .MinimumLevel.Debug()
+                .CreateLogger();
+
+            try
+            {
+                Log.Information("Starting up...");
+            
+                CreateWebHostBuilder(args).Build().Run();
+            
+                Log.Information("Shut down cleanly");
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
 
         private static IWebHostBuilder CreateWebHostBuilder(string[] args)

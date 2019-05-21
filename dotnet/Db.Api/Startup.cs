@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Buffers;
 using Db.Api.Storage;
 using Db.Storage;
+using Serilog;
+using Serilog.Context;
 
 namespace Db.Api
 {
@@ -32,6 +35,23 @@ namespace Db.Api
 
         public void Configure(IApplicationBuilder app)
         {
+            app.Use(async (context, next) =>
+            {
+                using (LogContext.PushProperty("TraceId", context.TraceIdentifier, true))
+                {
+                    try
+                    {
+                        Log.Debug("Executing request");
+                        await next.Invoke();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "Failed to execute request");
+                        throw;
+                    }
+                }
+            });
+            
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
