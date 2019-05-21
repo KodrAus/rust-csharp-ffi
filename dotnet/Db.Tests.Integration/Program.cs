@@ -10,10 +10,8 @@ namespace Db.Tests.Integration
             var builder = new ContainerBuilder();
             builder.RegisterModule(new TestCaseRunnerModule(args[0]));
 
-            using (var container = builder.Build())
-            {
-                return container.Resolve<TestCaseRunner>().Run();
-            }
+            using var container = builder.Build();
+            return container.Resolve<TestCaseRunner>().Run();
         }
     }
 }

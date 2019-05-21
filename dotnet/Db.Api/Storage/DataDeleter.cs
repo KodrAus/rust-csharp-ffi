@@ -15,13 +15,12 @@ namespace Db.Api.Storage
         public void Dispose()
         {
             _deleter.Dispose();
+            // The memory pool is borrowed so we don't dispose it
         }
 
-        public void Remove(string key)
+        public void Remove(Key key)
         {
-            var rawKey = Key.FromString(key);
-
-            _deleter.Remove(rawKey);
+            _deleter.Remove(key);
         }
     }
 }

@@ -16,7 +16,32 @@ namespace Db.Storage
             _key = key;
         }
 
+        public Key(string key)
+        {
+            if (key.Length < 10) throw new ArgumentException("The key is too short", nameof(key));
+            if (key[8] != '-') throw new Exception("The key is in an invalid format");
+
+            var hi = key.Substring(0, 8);
+            var lo = Convert.ToUInt64(key.Substring(9));
+
+            _key = BuildDbKey(hi, lo);
+        }
+
         public Key(string hi, ulong lo)
+        {
+            _key = BuildDbKey(hi, lo);
+        }
+
+        public override string ToString()
+        {
+            var (hi, lo) = this;
+
+            return $"{hi}-{lo}";
+        }
+
+        internal DbKey Value => _key;
+
+        private static DbKey BuildDbKey(string hi, ulong lo)
         {
             unsafe
             {
@@ -29,29 +54,9 @@ namespace Db.Storage
 
                 Unsafe.WriteUnaligned(Unsafe.Add<ulong>(keyPtr, 1), lo);
 
-                _key = key;
+                return key;
             }
         }
-
-        public static Key FromString(string key)
-        {
-            if (key.Length < 10) throw new ArgumentException("The key is too short", nameof(key));
-            if (key[8] != '-') throw new Exception("The key is in an invalid format");
-
-            var hi = key.Substring(0, 8);
-            var lo = Convert.ToUInt64(key.Substring(9));
-
-            return new Key(hi, lo);
-        }
-
-        public override string ToString()
-        {
-            var (hi, lo) = this;
-
-            return $"{hi}-{lo}";
-        }
-
-        internal DbKey Value => _key;
 
         public void Deconstruct(out string hi, out ulong lo)
         {

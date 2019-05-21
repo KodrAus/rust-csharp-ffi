@@ -8,11 +8,11 @@ namespace Db.Tests.Storage
         [Fact]
         public void Equality()
         {
-            var a = Key.FromString("abcdefgh-1");
-            var b = Key.FromString("abcdefgh-11");
+            var a = new Key("abcdefgh-1");
+            var b = new Key("abcdefgh-11");
 
-            var c = Key.FromString("abcdefgh-1");
-            var d = Key.FromString("abcdefgh-11");
+            var c = new Key("abcdefgh-1");
+            var d = new Key("abcdefgh-11");
 
             Assert.True(a == c);
             Assert.Equal(a, c);
@@ -25,7 +25,7 @@ namespace Db.Tests.Storage
         [Fact]
         public void ConvertFromString()
         {
-            var key = Key.FromString("abcdefgh-42");
+            var key = new Key("abcdefgh-42");
             var (hi, lo) = key;
 
             Assert.Equal("abcdefgh", hi);

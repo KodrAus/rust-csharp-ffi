@@ -13,7 +13,7 @@ namespace Db.Storage
             _handle = handle ?? throw new ArgumentNullException(nameof(handle));
         }
 
-        public void Set(Key key, Span<byte> value)
+        public void Set(Key key, ReadOnlySpan<byte> value)
         {
             EnsureOpen();
 

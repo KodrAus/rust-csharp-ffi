@@ -31,7 +31,7 @@ namespace Db.Storage
 
                     if (result.IsDone()) return ReadResult.Done();
 
-                    return ReadResult.Data(new Key(key), buffer.Slice(0, (int) actualValueLength));
+                    return ReadResult.Data(new Key(key), buffer, ..(int) actualValueLength);
                 }
             }
         }

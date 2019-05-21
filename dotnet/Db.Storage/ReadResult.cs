@@ -5,7 +5,7 @@ namespace Db.Storage
     public ref struct ReadResult
     {
         private Key _key;
-        private Span<byte> _value;
+        private Value _value;
         private int _requiredLength;
         private Result _result;
 
@@ -16,12 +16,25 @@ namespace Db.Storage
             BufferTooSmall
         }
 
-        internal static ReadResult Data(Key key, Span<byte> value)
+        public ref struct Value
+        {
+            internal Value(Span<byte> buffer, Range range)
+            {
+                var (start, length) = range.GetOffsetAndLength(buffer.Length);
+                Span = buffer.Slice(start, length);
+                Range = range;
+            }
+
+            public Span<byte> Span { get; }
+            public Range Range { get; }
+        }
+
+        internal static ReadResult Data(Key key, Span<byte> buffer, Range range)
         {
             return new ReadResult
             {
                 _key = key,
-                _value = value,
+                _value = new Value(buffer, range),
                 _result = Result.Ok
             };
         }
@@ -59,7 +72,7 @@ namespace Db.Storage
 
         public bool HasValue => _result == Result.Ok;
 
-        public void GetData(out Key key, out Span<byte> value)
+        public void GetData(out Key key, out Value value)
         {
             if (_result != Result.Ok) throw new InvalidOperationException($"`{nameof(ReadResult)}` has no data.");
 

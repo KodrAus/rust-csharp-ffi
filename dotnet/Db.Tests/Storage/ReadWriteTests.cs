@@ -45,7 +45,7 @@ namespace Db.Tests.Storage
 
                         var (_, foundPayload) = events.Single(evt => key == evt.Item1);
 
-                        Assert.Equal(payload.ToArray(), foundPayload.ToArray());
+                        Assert.Equal(payload.Span.ToArray(), foundPayload.ToArray());
                     }
                 }
 
