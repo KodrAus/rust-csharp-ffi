@@ -48,16 +48,21 @@ namespace Db.Api.Controllers
 
         [HttpPost]
         [Route("{key}")]
-        public async Task<ActionResult> Set(string key)
+        public ActionResult Set(string key)
         {
-            using (var doc = new Data(new Key(key),
-                await Utf8JsonBody.ReadToEndAsync(Request.Body, HttpContext.RequestAborted)))
-            using (var write = _store.BeginWrite())
+            // NOTE: This is probably a terrible idea, but right now async endpoints are hitting
+            // an assertion in CoreRT (GetRuntimeInterfaceMap() is not supported on this runtime.)
+            // So we defer the actual async handling to later
+            return new DeferredExecutionResult(async actionContext =>
             {
-                write.Set(doc);
-            }
+                var httpContext = actionContext.HttpContext;
 
-            return Ok();
+                using var doc = new Data(new Key(key),
+                    await Utf8JsonBody.ReadToEndAsync(httpContext.Request.Body, httpContext.RequestAborted));
+                using var write = _store.BeginWrite();
+
+                write.Set(doc);
+            });
         }
 
         private void AllowSynchronousIO()
