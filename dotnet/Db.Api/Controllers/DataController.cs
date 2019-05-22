@@ -26,9 +26,9 @@ namespace Db.Api.Controllers
             AllowSynchronousIO();
 
             var outerReader = _store.BeginRead();
-            return Defer(async actionContext =>
+            return Defer(async ctx =>
             {
-                var body = actionContext.HttpContext.Response.Body;
+                var body = ctx.Response.Body;
                 
                 using var reader = outerReader;
                 using var writer = new Utf8JsonWriter(body);
@@ -42,7 +42,7 @@ namespace Db.Api.Controllers
 
                 writer.WriteEndArray();
 
-                await writer.FlushAsync(HttpContext.RequestAborted);
+                await writer.FlushAsync(ctx.RequestAborted);
             });
         }
 
@@ -50,12 +50,10 @@ namespace Db.Api.Controllers
         [Route("{key}")]
         public ActionResult Set(string key)
         {
-            return Defer(async actionContext =>
+            return Defer(async ctx =>
             {
-                var httpContext = actionContext.HttpContext;
-
                 using var doc = new Data(new Key(key),
-                    await Utf8JsonBody.ReadToEndAsync(httpContext.Request.Body, httpContext.RequestAborted));
+                    await Utf8JsonBody.ReadToEndAsync(ctx.Request.Body, ctx.RequestAborted));
                 using var write = _store.BeginWrite();
 
                 write.Set(doc);
