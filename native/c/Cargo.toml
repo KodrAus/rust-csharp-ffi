@@ -20,5 +20,5 @@ version = "1"
 [dependencies.failure]
 version = "0.1"
 
-[dev-dependencies.failure_derive]
+[dependencies.failure_derive]
 version = "0.1"

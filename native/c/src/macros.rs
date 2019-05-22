@@ -10,15 +10,17 @@ A more advanced implementation could use a procedural macro, and generate C# bin
 macro_rules! ffi {
     ($(fn $name:ident ( $( $arg_ident:ident : $arg_ty:ty),* ) -> DbResult $body:expr)*) => {
         $(
+            #[allow(unsafe_code, unused_attributes)]
             #[no_mangle]
-            #[allow(unsafe_code)]
             pub unsafe extern "C" fn $name( $($arg_ident : $arg_ty),* ) -> DbResult {
                 #[allow(unused_mut)]
                 #[deny(unsafe_code)]
                 fn call( $(mut $arg_ident: $arg_ty),* ) -> DbResult {
-                    if $($crate::is_null::IsNull::is_null(&$arg_ident)) || * {
-                        return DbResult::ArgumentNull;
-                    }
+                    $(
+                        if $crate::is_null::IsNull::is_null(&$arg_ident) {
+                            return DbResult::ArgumentNull.context($crate::is_null::Error { arg: stringify!($arg_ident) });
+                        }
+                    )*
 
                     $body
                 }
@@ -32,15 +34,17 @@ macro_rules! ffi {
 macro_rules! ffi_no_catch {
     ($(fn $name:ident ( $( $arg_ident:ident : $arg_ty:ty),* ) -> DbResult $body:expr)*) => {
         $(
+            #[allow(unsafe_code, unused_attributes)]
             #[no_mangle]
-            #[allow(unsafe_code)]
             pub unsafe extern "C" fn $name( $($arg_ident : $arg_ty),* ) -> DbResult {
                 #[allow(unused_mut)]
                 #[deny(unsafe_code)]
                 fn call( $(mut $arg_ident: $arg_ty),* ) -> DbResult {
-                    if $($crate::is_null::IsNull::is_null(&$arg_ident)) || * {
-                        return DbResult::ArgumentNull;
-                    }
+                    $(
+                        if $crate::is_null::IsNull::is_null(&$arg_ident) {
+                            return DbResult::ArgumentNull.context($crate::is_null::Error { arg: stringify!($arg_ident) });
+                        }
+                    )*
 
                     $body
                 }

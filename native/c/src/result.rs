@@ -45,6 +45,19 @@ impl DbResult {
         }
     }
 
+    pub(super) fn context(self, e: impl Fail) -> Self {
+        let err = Some(format_error(&e));
+
+        LAST_RESULT.with(|last_result| {
+            *last_result.borrow_mut() = Some(LastResult {
+                value: self,
+                err,
+            });
+        });
+
+        self
+    }
+
     pub(super) fn catch(f: impl FnOnce() -> Self + UnwindSafe) -> Self {
         LAST_RESULT.with(|last_result| {
             {
@@ -116,17 +129,7 @@ where
     E: Fail,
 {
     fn from(e: E) -> Self {
-        let err = Some(format_error(&e));
-        let db_result = DbResult::InternalError;
-
-        LAST_RESULT.with(|last_result| {
-            *last_result.borrow_mut() = Some(LastResult {
-                value: db_result,
-                err,
-            });
-        });
-
-        db_result
+        DbResult::InternalError.context(e)
     }
 }
 
