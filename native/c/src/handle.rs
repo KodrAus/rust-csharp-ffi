@@ -134,7 +134,7 @@ satisfy their safety requirements
 */
 impl<T: ?Sized> Deref for HandleExclusive<T>
 where
-    HandleExclusive<T>: Send,
+    HandleExclusive<T>: Send + Sync,
 {
     type Target = T;
 

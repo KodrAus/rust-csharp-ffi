@@ -41,5 +41,11 @@ namespace Db.Tests.Integration.Api
             var response = await _client.PostAsync(new Uri(_baseUri, $"api/data/{data.Key}"), content);
             response.EnsureSuccessStatusCode();
         }
+
+        public async Task Remove(string key)
+        {
+            var response = await _client.DeleteAsync(new Uri(_baseUri, $"api/data/{key}"));
+            response.EnsureSuccessStatusCode();
+        }
     }
 }
