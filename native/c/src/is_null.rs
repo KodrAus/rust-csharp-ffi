@@ -1,3 +1,11 @@
+use failure_derive::*;
+
+#[derive(Debug, Fail)]
+#[fail(display = "argument `{}` was null", arg)]
+pub(super) struct Error {
+    pub(super) arg: &'static str,
+}
+
 /**
 Whether or not a value passed across an FFI boundary is null.
 */
