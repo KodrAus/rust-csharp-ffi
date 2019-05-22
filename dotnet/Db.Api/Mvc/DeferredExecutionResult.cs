@@ -1,11 +1,10 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Db.Api.Mvc
 {
-    class DeferredExecutionResult : ActionResult
+    public class DeferredExecutionResult : ActionResult
     {
         private readonly Func<ActionContext, Task> _exec;
 
