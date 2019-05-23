@@ -30,8 +30,6 @@
 
     <!-- Cargo configuration -->
     <PropertyGroup>
-        <CargoChannel Condition=" $(CargoChannel) == '' ">nightly</CargoChannel>
-
         <CargoTargetPath>$(MSBuildThisFileDirectory)/../target</CargoTargetPath>
 
         <CargoConfiguration>release</CargoConfiguration>
@@ -57,12 +55,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <CargoChannelArg Condition=" '$(CargoConfiguration)' != '' " Include="+$(CargoChannel)" />
         <CargoBuildArg Include="--target $(CargoTarget)" />
         <CargoBuildArg Condition=" '$(CargoConfiguration)' == 'release' " Include="--release" />
     </ItemGroup>
 
     <Target Name="Cargo" BeforeTargets="Build">
-        <Exec Command="cargo +$(CargoChannel) build @(CargoBuildArg, ' ')" WorkingDirectory="$(CargoWorkspacePath)" />
+        <Exec Command="cargo @(CargoChannelArg, ' ') build @(CargoBuildArg, ' ')" WorkingDirectory="$(CargoWorkspacePath)" />
     </Target>
 
     <!-- In AOT builds, add a reference to the IL compiler and link the static native artifact -->
@@ -70,6 +69,7 @@
         <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-*" />
 
         <IlcArg Include="--completetypemetadata" />
+        <IlcArg Include="-g" />
         <NativeLibrary Include="$(CargoArtifactPath)" />
     </ItemGroup>
 

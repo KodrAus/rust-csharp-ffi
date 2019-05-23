@@ -1,0 +1,40 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "coreclr build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/dotnet/Db.Api/Db.Api.csproj"
+            ],
+            "problemMatcher": "$tsc"
+        },
+        {
+            "label": "linux-x64 coreclr publish",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "-f", "netcoreapp3.0",
+                "-r", "linux-x64",
+                "${workspaceFolder}/dotnet/Db.Api/Db.Api.csproj"
+            ],
+            "problemMatcher": "$tsc"
+        },
+        {
+            "label": "linux-x64 corert publish",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "-f", "netcoreapp3.0",
+                "-r", "linux-x64",
+                "${workspaceFolder}/dotnet/Db.Api/Db.Api.csproj",
+                "/p:AotBuild=true"
+            ],
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

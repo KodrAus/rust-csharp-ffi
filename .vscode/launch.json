@@ -1,0 +1,53 @@
+{
+   "version": "0.2.0",
+   "configurations": [
+        {
+            "name": "coreclr launch",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "coreclr build",
+            "program": "${workspaceFolder}/dotnet/Db.Api/bin/Debug/netcoreapp3.0/Db.Api.dll",
+            "args": ["--urls", "http://0.0.0.0:5000"],
+            "cwd": "${workspaceFolder}/dotnet/Db.Api",
+            "stopAtEntry": false
+        },
+        {
+            "name": "linux-x64 lldb corert launch",
+            "type": "lldb",
+            "request": "launch",
+            "preLaunchTask": "linux-x64 corert publish",
+            "program": "${workspaceFolder}/dotnet/Db.Api/bin/Debug/netcoreapp3.0/linux-x64/publish/Db.Api",
+            "args": ["--urls", "http://0.0.0.0:5000"],
+            "postRunCommands": [
+                "process handle -s false SIGUSR1 SIGUSR2"
+            ],
+            "cwd": "${workspaceFolder}/dotnet/Db.Api"
+        },
+        {
+            "name": "linux-x64 lldb corert quick launch",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/dotnet/Db.Api/bin/Debug/netcoreapp3.0/linux-x64/publish/Db.Api",
+            "args": ["--urls", "http://0.0.0.0:5000"],
+            "postRunCommands": [
+                "process handle -s false SIGUSR1 SIGUSR2"
+            ],
+            "cwd": "${workspaceFolder}/dotnet/Db.Api"
+        },
+        {
+            "name": "linux-x64 lldb coreclr launch",
+            "type": "lldb",
+            "request": "launch",
+            "preLaunchTask": "linux-x64 coreclr publish",
+            "program": "${workspaceFolder}/dotnet/Db.Api/bin/Debug/netcoreapp3.0/linux-x64/publish/Db.Api",
+            "args": ["--urls", "http://0.0.0.0:5000"],
+            "preRunCommands": [
+                "plugin load ~/.dotnet/shared/Microsoft.NETCore.App/3.0.0-preview5-27626-15/libsosplugin.so"
+            ],
+            "postRunCommands": [
+                "process handle -s false SIGUSR1 SIGUSR2"
+            ],
+            "cwd": "${workspaceFolder}/dotnet/Db.Api"
+        }
+    ]
+}

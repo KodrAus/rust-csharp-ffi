@@ -6,7 +6,17 @@ It can be run as a typical .NET application, or it can be compiled ahead of time
 
 ## Building
 
-This project requires:
+### Using VS Code + Docker
+
+This repository includes a [development container](https://code.visualstudio.com/docs/remote/containers) that includes all the system dependencies needed to build and debug this project.
+
+> Note: native compilation can be a very intensive process. If you run the dev container but hit issues with slow or cancelled builds on platforms without native Docker support, try increasing resource limits set on your Docker host.
+
+Use the _linux-x64 lldb corert launch_ task to begin a native debugging session.
+
+### Locally
+
+In a local environment, this project requires:
 
 - A recent [Rust nightly toolchain](https://rustup.rs).
 - A [.NET Core SDK](https://dotnet.microsoft.com/download) supporting `netcoreapp3.0`.
