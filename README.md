@@ -73,6 +73,8 @@ The web API (`Db.Api` project) accepts the following command-line arguments:
 - `/dotnet`: Contains the managed C# library (raw bindings and a web API built on top).
   - `/Db.Storage`: The raw bindings to the Rust library.
   - `/Db.Api`: An ASP.NET Core web API that uses the raw bindings.
+- `/ui`: Contains the UI app that interacts with the web API.
+- `/ci`: Contains build scripts. These are safe to run in a local environment.
 
 The most interesting bits for FFI live in the `/native/c` and `/dotnet/Db.Storage` projects.
 
