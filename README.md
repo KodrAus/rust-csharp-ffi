@@ -20,6 +20,7 @@ In a local environment, this project requires:
 
 - A recent [Rust nightly toolchain](https://rustup.rs).
 - A [.NET Core SDK](https://dotnet.microsoft.com/download) supporting `netcoreapp3.0`.
+- A recent [Node](https://nodejs.org) with the [Angular CLI](https://angular.io/cli).
 
 Building with CoreRT additionally requires a native C++ toolchain. See [the list of CoreRT prerequisites](https://github.com/dotnet/corert/blob/master/samples/prerequisites.md).
 
@@ -49,6 +50,13 @@ $ ./bin/Debug/netcoreapp3.0/$DOTNET_RID/publish/Db.Api
 ```
 
 where `$DOTNET_RID` is a [runtime identifier](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog).
+
+### Running the UI
+
+```
+$ npm install
+$ ng serve
+```
 
 ### Configuration
 
