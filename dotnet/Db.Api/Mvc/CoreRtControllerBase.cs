@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,7 +11,7 @@ namespace Db.Api.Mvc
         // NOTE: This is probably a terrible idea, but right now async endpoints are hitting
         // an assertion in CoreRT (GetRuntimeInterfaceMap() is not supported on this runtime.)
         // So we defer the actual async handling to later
-        protected DeferredExecutionResult Defer(Func<ActionContext, Task> exec)
+        protected DeferredExecutionResult Defer(Func<HttpContext, Task> exec)
         {
             return new DeferredExecutionResult(exec);
         }
