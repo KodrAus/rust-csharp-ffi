@@ -5,7 +5,8 @@
 		"rust-lang.rust",
 		"bungcip.better-toml",
         "vadimcn.vscode-lldb",
-        "ms-vscode.csharp"
+		"ms-vscode.csharp",
+		"robinbentley.sass-indented"
 	],
 	"runArgs": [
 		"--cap-add=SYS_PTRACE",

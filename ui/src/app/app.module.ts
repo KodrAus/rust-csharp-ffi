@@ -6,19 +6,20 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
-import {MatCardModule} from '@angular/material/card';
-import {MatToolbarModule} from '@angular/material/toolbar';
+import { MatToolbarModule } from '@angular/material/toolbar';
+
+import { DataModule } from './data/data.module';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
   ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    MatCardModule,
     MatToolbarModule,
-    AppRoutingModule
+    AppRoutingModule,
+    DataModule
   ],
   providers: [],
   bootstrap: [AppComponent]
