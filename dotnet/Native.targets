@@ -55,7 +55,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <CargoChannelArg Condition=" '$(CargoConfiguration)' != '' " Include="+$(CargoChannel)" />
+        <CargoChannelArg Condition=" '$(CargoChannel)' != '' " Include="+$(CargoChannel)" />
         <CargoBuildArg Include="--target $(CargoTarget)" />
         <CargoBuildArg Condition=" '$(CargoConfiguration)' == 'release' " Include="--release" />
     </ItemGroup>

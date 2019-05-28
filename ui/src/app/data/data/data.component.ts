@@ -10,7 +10,7 @@ import { Item } from '../item';
   styleUrls: ['./data.component.sass']
 })
 export class DataComponent implements OnInit {
-  private data: Item[] = [];
+  data: Item[] = [];
 
   constructor(private dataService: DataService) { }
 

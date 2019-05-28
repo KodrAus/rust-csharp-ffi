@@ -14,7 +14,7 @@ export class ListComponent implements OnInit {
   @Output() set = new EventEmitter<Item>();
   @Output() delete = new EventEmitter<Item>();
 
-  private items: Item[] = [];
+  items: Item[] = [];
 
   constructor() { }
 

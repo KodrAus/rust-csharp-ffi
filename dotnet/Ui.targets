@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!-- Ui configuration -->
+    <PropertyGroup>
+        <UiWorkspacePath>$(MSBuildThisFileDirectory)/..</UiWorkspacePath>
+
+        <UiConfiguration>prod</UiConfiguration>
+        <UiConfiguration Condition=" '$(Configuration)' == 'Debug' ">dev</UiConfiguration>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <UiArtifacts Include="$(UiWorkspacePath)/dist/*" />
+        <UiBuildArg Include="--output-path dist" />
+        <UiBuildArg Condition=" '$(UiConfiguration)' == 'prod' " Include="--prod" />
+    </ItemGroup>
+
+    <Target Name="Angular" AfterTargets="Publish">
+        <Exec Command="ng build @(UiBuildArg, ' ')" WorkingDirectory="$(UiWorkspacePath)" />
+    </Target>
+
+    <Target Name="AngularCopy" DependsOnTargets="Angular" AfterTargets="Publish">
+        <Copy SourceFiles="@(UiArtifacts)" DestinationFolder="$(PublishDir)/wwwroot" />
+    </Target>
+</Project>

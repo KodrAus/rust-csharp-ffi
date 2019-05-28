@@ -15,7 +15,7 @@ export class ItemComponent implements OnInit {
   @Output() delete = new EventEmitter<Item>();
   @ViewChild('title') title: ElementRef; 
 
-  private item: Item;
+  item: Item;
 
   constructor() { }
 
