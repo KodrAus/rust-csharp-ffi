@@ -95,6 +95,8 @@ impl<T: ?Sized> ThreadBound<T> {
     }
 }
 
+// NOTE: The `Send` impl for `ThreadBound` is still determined by `T`
+
 unsafe_impl!("The inner value can't actually be accessed concurrently" => impl<T: ?Sized> Sync for ThreadBound<T> {});
 
 impl<T: ?Sized> Deref for ThreadBound<T> {
