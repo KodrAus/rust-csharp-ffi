@@ -15,6 +15,8 @@
     </ItemGroup>
 
     <Target Name="Angular" AfterTargets="Publish">
+        <Exec Command="npm install" WorkingDirectory="$(UiWorkspacePath)" />
+        <Exec Command="npm rebuild node-sass" WorkingDirectory="$(UiWorkspacePath)" />
         <Exec Command="ng build @(UiBuildArg, ' ')" WorkingDirectory="$(UiWorkspacePath)" />
     </Target>
 

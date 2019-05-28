@@ -2,7 +2,6 @@
 .idea
 dbdata
 /target
-Cargo.lock
 bin
 obj
 
