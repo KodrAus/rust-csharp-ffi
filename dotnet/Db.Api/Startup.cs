@@ -29,6 +29,11 @@ namespace Db.Api
             services.Add(new ServiceDescriptor(typeof(ApplicationPartManager), applicationPartManager));
 
             services.AddMvcCore();
+            services.AddCors(options => options
+                .AddDefaultPolicy(cors => cors
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowAnyOrigin()));
 
             services.AddSingleton(new DataStore(MemoryPool<byte>.Shared, Store.Open(DataPath)));
         }
@@ -52,6 +57,7 @@ namespace Db.Api
                 }
             });
             
+            app.UseCors();
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {

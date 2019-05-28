@@ -1,4 +1,19 @@
 <mat-card>
-  <h1>{{value.title}}</h1>
-  <p>{{value.description}}</p>
+  <div>
+    <p class="mat-small">{{item.value.id}}</p>
+    <div class="fields">
+      <mat-form-field class="title">
+        <input #title matInput [(ngModel)]="item.value.title" placeholder="Title">
+      </mat-form-field>
+      <mat-form-field class="description">
+        <textarea matInput [(ngModel)]="item.value.description" placeholder="Description"></textarea>
+      </mat-form-field>
+    </div>
+  </div>
+  <mat-toolbar>
+      <mat-toolbar-row>
+        <button mat-raised-button color="primary" [disabled]="item.isSaving" (click)="onSet()">Set</button>
+        <button mat-raised-button color="warn" [disabled]="item.isSaving" (click)="onDelete()">Delete</button>
+      </mat-toolbar-row>
+    </mat-toolbar>
 </mat-card>

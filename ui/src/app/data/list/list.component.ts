@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 
-import { Data } from '../data';
+import { Item } from '../item';
 
 @Component({
   selector: 'data-list',
@@ -11,11 +11,21 @@ import { Data } from '../data';
   ]
 })
 export class ListComponent implements OnInit {
-  private items: Data[] = [];
+  @Output() set = new EventEmitter<Item>();
+  @Output() delete = new EventEmitter<Item>();
+
+  private items: Item[] = [];
 
   constructor() { }
 
   ngOnInit() {
   }
 
+  onSet(item: Item) {
+    this.set.emit(item);
+  }
+
+  onDelete(item: Item) {
+    this.delete.emit(item);
+  }
 }
