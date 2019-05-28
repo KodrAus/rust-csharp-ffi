@@ -18,7 +18,7 @@ jobs:
   - task: NodeTool@0
     inputs:
       versionSpec: '10.x'
-  - script: sudo chown -R $(whoami) ~/.npm && sudo npm install -g @angular/cli
+  - script: sudo npm install -g @angular/cli && sudo chown -R $(whoami) ~/.npm
 
   - powershell: ci/linux-x64.ps1
 
