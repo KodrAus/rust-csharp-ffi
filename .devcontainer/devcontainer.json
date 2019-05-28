@@ -5,11 +5,13 @@
 		"rust-lang.rust",
 		"bungcip.better-toml",
         "vadimcn.vscode-lldb",
-        "ms-vscode.csharp"
+		"ms-vscode.csharp",
+		"robinbentley.sass-indented"
 	],
 	"runArgs": [
 		"--cap-add=SYS_PTRACE",
 		"--security-opt", "seccomp=unconfined"
 	],
-	"appPort": ["5000:5000"],
+	"appPort": ["5000:5000", "4200:4200"],
+	"postCreateCommand": "dotnet restore && npm install && npm rebuild node-sass"
 }

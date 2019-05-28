@@ -239,7 +239,10 @@ impl<T> DeferredCleanup<T> {
     });
 }
 
-unsafe_impl!("The inner value can't actually be accessed concurrently" => impl<T> Send for DeferredCleanup<T> {});
+unsafe_impl!(
+    "The inner value is pinned to the current thread and isn't actually sent. \
+     Dropping from another thread will signal cleanup on the original" =>
+    impl<T> Send for DeferredCleanup<T> {});
 unsafe_impl!("The inner value can't actually be accessed concurrently" => impl<T> Sync for DeferredCleanup<T> {});
 
 impl<T> Deref for DeferredCleanup<T> {

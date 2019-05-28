@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <Import Project="../Dbc.targets" />
+  <Import Project="../Ui.targets" />
 
   <ItemGroup>
     <Folder Include="wwwroot" />

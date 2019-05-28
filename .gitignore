@@ -2,6 +2,14 @@
 .idea
 dbdata
 /target
-Cargo.lock
 bin
 obj
+
+/dist
+/tmp
+/out-tsc
+/bazel-out
+/node_modules
+
+.DS_Store
+Thumbs.db

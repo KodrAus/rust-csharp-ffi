@@ -15,6 +15,10 @@ jobs:
       version: 3.x
       includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '10.x'
+  - script: sudo npm install -g @angular/cli && sudo chown -R $(whoami) ~/.npm
 
   - powershell: ci/linux-x64.ps1
 
@@ -32,6 +36,10 @@ jobs:
       version: 3.x
       includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '10.x'
+  - script: npm install -g @angular/cli
 
   - powershell: ci/osx-x64.ps1
 
@@ -51,6 +59,10 @@ jobs:
       version: 3.x
       includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '10.x'
+  - powershell: npm install -g @angular/cli
 
   - powershell: |
       $env:PATH = "$env:PATH;$env:USERPROFILE\.cargo\bin"

@@ -31,6 +31,10 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
     curl \
     2>&1
 
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
+RUN apt-get -y install --no-install-recommends nodejs
+RUN npm install -g @angular/cli
+
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly-2019-05-22
 RUN rustup component add rls rust-analysis rust-src
 

@@ -1,0 +1,7 @@
+<mat-toolbar class="controls">
+    <mat-toolbar-row>
+        <button mat-raised-button color="primary" (click)="createData()">Add</button>
+    </mat-toolbar-row>
+</mat-toolbar>
+
+<data-list [items]="data" (set)="setData($event)" (delete)="deleteData($event)"></data-list>

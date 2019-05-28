@@ -12,13 +12,27 @@
             "problemMatcher": "$tsc"
         },
         {
+            "label": "coreclr watch",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "-p", "${workspaceFolder}/dotnet/Db.Api/Db.Api.csproj",
+                "run", "--",
+                "--urls", "http://0.0.0.0:5000"
+            ],
+            "problemMatcher": "$tsc"
+        },
+        {
             "label": "linux-x64 coreclr publish",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "publish",
-                "-f", "netcoreapp3.0",
-                "-r", "linux-x64",
+                "-f",
+                "netcoreapp3.0",
+                "-r",
+                "linux-x64",
                 "${workspaceFolder}/dotnet/Db.Api/Db.Api.csproj"
             ],
             "problemMatcher": "$tsc"
@@ -29,12 +43,22 @@
             "type": "process",
             "args": [
                 "publish",
-                "-f", "netcoreapp3.0",
-                "-r", "linux-x64",
+                "-f",
+                "netcoreapp3.0",
+                "-r",
+                "linux-x64",
                 "${workspaceFolder}/dotnet/Db.Api/Db.Api.csproj",
                 "/p:AotBuild=true"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "ng watch",
+            "type": "npm",
+            "script": "startc",
+            "problemMatcher": [
+                "$tsc"
+            ]
         }
     ]
 }
