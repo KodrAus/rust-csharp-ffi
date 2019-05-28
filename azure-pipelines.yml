@@ -15,9 +15,7 @@ jobs:
       version: 3.x
       includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
-  - task: Npm@1
-    inputs:
-      command: install -g @angular/cli
+  - script: npm install -g @angular/cli
 
   - powershell: ci/linux-x64.ps1
 
@@ -35,9 +33,7 @@ jobs:
       version: 3.x
       includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
-  - task: Npm@1
-    inputs:
-      command: install -g @angular/cli
+  - script: npm install -g @angular/cli
 
   - powershell: ci/osx-x64.ps1
 
@@ -57,9 +53,7 @@ jobs:
       version: 3.x
       includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
-  - task: Npm@1
-    inputs:
-      command: install -g @angular/cli
+  - powershell: npm install -g @angular/cli
 
   - powershell: |
       $env:PATH = "$env:PATH;$env:USERPROFILE\.cargo\bin"

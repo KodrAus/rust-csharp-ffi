@@ -4,15 +4,17 @@ This repository contains an example Rust + C# hybrid application, based on [this
 
 It can be run as a typical .NET application, or it can be compiled ahead of time into a single native binary for [CoreRT](https://github.com/dotnet/corert).
 
-## Building
+## Getting started
 
 ### Using VS Code + Docker
 
 This repository includes a [development container](https://code.visualstudio.com/docs/remote/containers) that includes all the system dependencies needed to build and debug this project.
 
-> Note: native compilation can be a very intensive process. If you run the dev container but hit issues with slow or cancelled builds on platforms without native Docker support, try increasing resource limits set on your Docker host.
+Use the _coreclr watch_ and _ng watch_ tasks to run the UI and API projects. The UI will listen on `localhost:4200` and the API will listen on `localhost:5000`.
 
 Use the _linux-x64 lldb corert launch_ task to begin a native debugging session.
+
+> Note: native compilation can be a very intensive process. If you run the dev container but hit issues with slow or cancelled builds on platforms without native Docker support, try increasing resource limits set on your Docker host.
 
 ### Locally
 
@@ -23,6 +25,8 @@ In a local environment, this project requires:
 - A recent [Node](https://nodejs.org) with the [Angular CLI](https://angular.io/cli).
 
 Building with CoreRT additionally requires a native C++ toolchain. See [the list of CoreRT prerequisites](https://github.com/dotnet/corert/blob/master/samples/prerequisites.md).
+
+## Building
 
 ### Building for CoreCLR
 
