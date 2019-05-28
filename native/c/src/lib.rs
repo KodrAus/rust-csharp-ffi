@@ -217,7 +217,7 @@ ffi! {
         };
 
         let buf = unsafe_block!("The buffer lives as long as `db_read_next` and the length is within the buffer" => slice::from_raw_parts_mut(value_buf, value_buf_len));
-        
+
         read(&mut *reader, buf)
     }
 

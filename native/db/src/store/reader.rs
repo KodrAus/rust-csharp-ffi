@@ -17,8 +17,8 @@ use crate::{
     },
     error::Error,
     store::{
-        Store,
         Db,
+        Store,
     },
 };
 

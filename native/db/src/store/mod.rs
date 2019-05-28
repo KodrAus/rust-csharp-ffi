@@ -24,9 +24,7 @@ impl Store {
     pub fn open(path: impl AsRef<Path>) -> Result<Self, Error> {
         let db = sled::Db::start_default(path).map_err(Error::fail)?;
 
-        Ok(Store {
-            db: Db::new(db),
-        })
+        Ok(Store { db: Db::new(db) })
     }
 
     pub fn close(&mut self) -> Result<(), Error> {

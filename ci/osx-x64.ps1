@@ -4,6 +4,9 @@ $scriptDir = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 
 Clean-OutputDirs
 
+cargo test
+if ($LastExitCode) { exit 1 }
+
 dotnet test -v n
 if ($LastExitCode) { exit 1 }
 
