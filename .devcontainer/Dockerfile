@@ -29,7 +29,6 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
     zlib1g-dev \
     apt-transport-https \
     curl \
-    nodejs \
     2>&1
 
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
