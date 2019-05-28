@@ -18,7 +18,7 @@ jobs:
   - task: NodeTool@0
     inputs:
       versionSpec: '10.x'
-  - script: sudo npm install -g @angular/cli
+  - script: echo $npm_config_cache && sudo chown -R ~/.npm && sudo npm install -g @angular/cli
 
   - powershell: ci/linux-x64.ps1
 
