@@ -18,7 +18,7 @@ macro_rules! ffi {
                 fn call( $(mut $arg_ident: $arg_ty),* ) -> DbResult {
                     $(
                         if $crate::is_null::IsNull::is_null(&$arg_ident) {
-                            return DbResult::ArgumentNull.context($crate::is_null::Error { arg: stringify!($arg_ident) });
+                            return DbResult::argument_null().context($crate::is_null::Error { arg: stringify!($arg_ident) });
                         }
                     )*
 
@@ -42,7 +42,7 @@ macro_rules! ffi_no_catch {
                 fn call( $(mut $arg_ident: $arg_ty),* ) -> DbResult {
                     $(
                         if $crate::is_null::IsNull::is_null(&$arg_ident) {
-                            return DbResult::ArgumentNull.context($crate::is_null::Error { arg: stringify!($arg_ident) });
+                            return DbResult::argument_null().context($crate::is_null::Error { arg: stringify!($arg_ident) });
                         }
                     )*
 

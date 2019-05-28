@@ -3,6 +3,10 @@ use std::{
     cell::RefCell,
     fmt::Write,
     ops::Try,
+    sync::atomic::{
+        AtomicU32,
+        Ordering,
+    },
     panic::{
         catch_unwind,
         UnwindSafe,
@@ -12,6 +16,12 @@ use std::{
 use failure::Fail;
 
 use crate::std_ext::prelude::*;
+
+static LAST_ERR_ID: AtomicU32 = AtomicU32::new(0);
+
+fn next_err_id() -> u32 {
+    LAST_ERR_ID.fetch_add(1, Ordering::SeqCst)
+}
 
 thread_local! {
     static LAST_RESULT: RefCell<Option<LastResult>> = RefCell::new(None);
@@ -23,9 +33,16 @@ The result of making a call across an FFI boundary.
 The result may indicate success or an error.
 If an error is returned, the thread-local `last_result` can be inspected for more details.
 */
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DbResult {
+    kind: Kind,
+    id: u32,
+}
+
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DbResult {
+enum Kind {
     Ok,
 
     Done,
@@ -36,16 +53,73 @@ pub enum DbResult {
 }
 
 impl DbResult {
+    pub(super) fn ok() -> Self {
+        DbResult {
+            kind: Kind::Ok,
+            id: 0,
+        }
+    }
+
+    pub fn is_ok(&self) -> bool {
+        self.kind == Kind::Ok
+    }
+
+    pub(super) fn done() -> Self {
+        DbResult {
+            kind: Kind::Done,
+            id: 0,
+        }
+    }
+
+    pub fn is_done(&self) -> bool {
+        self.kind == Kind::Done
+    }
+
+    pub(super) fn buffer_too_small() -> Self {
+        DbResult {
+            kind: Kind::BufferTooSmall,
+            id: next_err_id(),
+        }
+    }
+
+    pub fn is_buffer_too_small(&self) -> bool {
+        self.kind == Kind::BufferTooSmall
+    }
+
+    pub(super) fn argument_null() -> Self {
+        DbResult {
+            kind: Kind::ArgumentNull,
+            id: next_err_id(),
+        }
+    }
+
+    pub fn is_argument_null(&self) -> bool {
+        self.kind == Kind::ArgumentNull
+    }
+
+    pub(super) fn internal_error() -> Self {
+        DbResult {
+            kind:  Kind::InternalError,
+            id: next_err_id(),
+        }
+    }
+
+    pub fn is_internal_error(&self) -> bool {
+        self.kind == Kind::InternalError
+    }
+
     pub fn as_err(&self) -> Option<&'static str> {
-        match *self {
-            DbResult::Ok | DbResult::Done => None,
-            DbResult::ArgumentNull => Some("a required argument was null"),
-            DbResult::BufferTooSmall => Some("a supplied buffer was too small"),
-            DbResult::InternalError => Some("an internal error occurred"),
+        match self.kind {
+            Kind::Ok | Kind::Done => None,
+            Kind::ArgumentNull => Some("a required argument was null"),
+            Kind::BufferTooSmall => Some("a supplied buffer was too small"),
+            Kind::InternalError => Some("an internal error occurred"),
         }
     }
 
     pub(super) fn context(self, e: impl Fail) -> Self {
+        assert!(self.as_err().is_some(), "context can only be attached to errors");
+
         let err = Some(format_error(&e));
 
         LAST_RESULT.with(|last_result| {
@@ -94,7 +168,7 @@ impl DbResult {
                             last_result.err.or_else_mut(extract_panic);
                         })
                         .get_or_insert_with(|| LastResult {
-                            value: DbResult::InternalError,
+                            value: DbResult::internal_error(),
                             err: extract_panic(),
                         })
                         .value
@@ -108,6 +182,10 @@ impl DbResult {
             let last_result = last_result.borrow();
 
             let last_result = last_result.as_ref().map(|last_result| {
+                debug_assert!(
+                    last_result.value.as_err().map(|_| ()) == last_result.err.as_ref().map(|_| ()),
+                    "{:?} either is ok with an error message, or is an error without a message", last_result);
+
                 let msg = last_result.err.as_ref().map(|msg| msg.as_ref());
 
                 (last_result.value, msg)
@@ -129,7 +207,7 @@ where
     E: Fail,
 {
     fn from(e: E) -> Self {
-        DbResult::InternalError.context(e)
+        DbResult::internal_error().context(e)
     }
 }
 
@@ -141,8 +219,8 @@ impl Try for DbResult {
     type Error = Self;
 
     fn into_result(self) -> Result<<Self as Try>::Ok, <Self as Try>::Error> {
-        match self {
-            DbResult::Ok | DbResult::Done => Ok(self),
+        match self.kind {
+            Kind::Ok | Kind::Done => Ok(self),
             _ => Err(self),
         }
     }
@@ -170,6 +248,7 @@ impl Try for DbResult {
     }
 }
 
+#[derive(Debug)]
 struct LastResult {
     value: DbResult,
     err: Option<String>,
@@ -210,6 +289,7 @@ fn extract_panic(err: &Box<dyn Any + Send + 'static>) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
+    use std::mem;
     use failure_derive::*;
 
     use super::*;
@@ -224,6 +304,11 @@ mod tests {
     enum TestError {
         #[fail(display = "an error message")]
         Variant(#[cause] TestInnerError),
+    }
+
+    #[test]
+    fn db_result_is_u64_sized() {
+        assert_eq!(mem::size_of::<u64>(), mem::size_of::<DbResult>());
     }
 
     #[test]
@@ -245,11 +330,11 @@ mod tests {
             unreachable!()
         });
 
-        assert_eq!(DbResult::InternalError, result);
+        assert_eq!(DbResult::internal_error(), result);
 
         DbResult::with_last_result(|last_result| {
             assert_match!(Some((result, err)) = last_result => {
-                assert_eq!(DbResult::InternalError, result);
+                assert_eq!(DbResult::internal_error(), result);
 
                 assert!(err.is_some());
             });
@@ -275,11 +360,11 @@ mod tests {
     fn last_result_catch_panic() {
         let result = DbResult::catch(|| panic!("something didn't work"));
 
-        assert_eq!(DbResult::InternalError, result);
+        assert_eq!(DbResult::internal_error(), result);
 
         DbResult::with_last_result(|last_result| {
             assert_match!(Some((result, err)) = last_result => {
-                assert_eq!(DbResult::InternalError, result);
+                assert_eq!(DbResult::internal_error(), result);
 
                 assert!(err.is_some());
             });

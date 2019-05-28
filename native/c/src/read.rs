@@ -59,12 +59,12 @@ pub(super) fn into_fixed_buffer(
     if written > buf.len() {
         *actual_value_len = written;
 
-        DbResult::BufferTooSmall
+        DbResult::buffer_too_small()
     // The entire payload fit in the buffer
     } else {
         *actual_value_len = written;
         *key = DbKey(data.key.to_bytes());
 
-        DbResult::Ok
+        DbResult::ok()
     }
 }

@@ -6,7 +6,7 @@ namespace Db.Storage.Native
     [StructLayout(LayoutKind.Sequential)]
     public struct DbResult
     {
-        private enum DbResultValue : uint
+        private enum Kind : uint
         {
             Ok,
 
@@ -17,7 +17,8 @@ namespace Db.Storage.Native
             InternalError
         }
 
-        private readonly DbResultValue _result;
+        private readonly Kind _result;
+        private readonly uint _id;
 
         public static (DbResult, string) GetLastResult()
         {
@@ -30,9 +31,10 @@ namespace Db.Storage.Native
 
             var (lastResult, msg) = GetLastResult();
 
-            // This isn't perfect, but avoids some cases where native calls are made
-            // between checking for success.
-            if (lastResult._result == _result)
+            // Check whether the last result kind and id are the same
+            // We need to use both because successful results won't
+            // bother setting the id (it avoids some synchronization)
+            if (lastResult._result == _result && lastResult._id == _id)
                 throw new Exception($"Native storage failed ({_result}), {msg?.TrimEnd()}");
 
             throw new Exception($"Native storage failed with {_result}");
@@ -40,17 +42,17 @@ namespace Db.Storage.Native
 
         public bool IsSuccess()
         {
-            return _result == DbResultValue.Ok || _result == DbResultValue.Done;
+            return _result == Kind.Ok || _result == Kind.Done;
         }
 
         public bool IsDone()
         {
-            return _result == DbResultValue.Done;
+            return _result == Kind.Done;
         }
 
         public bool IsBufferTooSmall()
         {
-            return _result == DbResultValue.BufferTooSmall;
+            return _result == Kind.BufferTooSmall;
         }
     }
 }

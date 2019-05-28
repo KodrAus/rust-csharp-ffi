@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleToAttribute("Db.Tests")]
 
 namespace Db.Storage.Native
 {
-    static class Bindings
+    internal static class Bindings
     {
 #if AOT
         const string NativeLibrary = "*";
@@ -156,6 +159,26 @@ namespace Db.Storage.Native
         {
             return MaybeCheck(_db_delete_end(deleter), check);
         }
+
+#if DEBUG
+        [DllImport(NativeLibrary, EntryPoint = "db_test_error", ExactSpelling = true,
+            CallingConvention = CallingConvention.Cdecl)]
+        private static extern DbResult _db_test_error();
+
+        public static DbResult db_test_error(bool check = true)
+        {
+            return MaybeCheck(_db_test_error(), check);
+        }
+        
+        [DllImport(NativeLibrary, EntryPoint = "db_test_ok", ExactSpelling = true,
+            CallingConvention = CallingConvention.Cdecl)]
+        private static extern DbResult _db_test_ok();
+
+        public static DbResult db_test_ok(bool check = true)
+        {
+            return MaybeCheck(_db_test_ok(), check);
+        }
+#endif
 
         private static DbResult MaybeCheck(DbResult result, bool check)
         {
