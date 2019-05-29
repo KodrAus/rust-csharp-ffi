@@ -3,6 +3,7 @@ use std::io::Read;
 use failure_derive::*;
 
 use crate::{
+    handle::Out,
     DbKey,
     DbResult,
 };
@@ -22,8 +23,8 @@ pub(super) enum Error {
 pub(super) fn into_fixed_buffer(
     data: &mut Data<impl Read>,
     buf: &mut [u8],
-    key: &mut DbKey,
-    actual_value_len: &mut usize,
+    key: &mut Out<DbKey>,
+    actual_value_len: &mut Out<usize>,
 ) -> DbResult {
     // A zero-sized input buffer will cause an infinite loop below
     // if we let it through.
@@ -57,13 +58,13 @@ pub(super) fn into_fixed_buffer(
 
     // If we wrote more bytes than the buffer could fit, return the required size
     if written > buf.len() {
-        *actual_value_len = written;
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => actual_value_len.assign(written));
 
         DbResult::buffer_too_small()
     // The entire payload fit in the buffer
     } else {
-        *actual_value_len = written;
-        *key = DbKey(data.key.to_bytes());
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => actual_value_len.assign(written));
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => key.assign(DbKey(data.key.to_bytes())));
 
         DbResult::ok()
     }
