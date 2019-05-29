@@ -6,6 +6,7 @@
 		"bungcip.better-toml",
         "vadimcn.vscode-lldb",
 		"ms-vscode.csharp",
+		"ms-vscode.vscode-typescript-tslint-plugin",
 		"robinbentley.sass-indented"
 	],
 	"runArgs": [

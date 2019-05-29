@@ -1,5 +1,5 @@
 <mat-grid-list cols="3" rowHeight="500px">
   <mat-grid-tile *ngFor="let item of items">
-    <data-item [item]="item" (set)="onSet($event)" (delete)="onDelete($event)"></data-item>
+    <app-data-item [item]="item" (set)="onSet($event)" (delete)="onDelete($event)"></app-data-item>
   </mat-grid-tile>
 </mat-grid-list>
