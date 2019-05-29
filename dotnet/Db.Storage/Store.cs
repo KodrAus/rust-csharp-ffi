@@ -9,6 +9,11 @@ namespace Db.Storage
         private StoreHandle _handle;
         private string _path;
 
+        public void Dispose()
+        {
+            _handle.Dispose();
+        }
+
         public static Store Open(string path)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
@@ -45,11 +50,6 @@ namespace Db.Storage
         {
             Bindings.db_delete_begin(_handle, out var deleterHandle);
             return new Deleter(deleterHandle);
-        }
-
-        public void Dispose()
-        {
-            _handle.Dispose();
         }
     }
 }

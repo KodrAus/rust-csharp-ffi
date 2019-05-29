@@ -7,8 +7,8 @@ namespace Db.Api.Storage
 {
     public sealed class DataReader : IDisposable
     {
-        private readonly Reader _reader;
         private readonly MemoryPool<byte> _pool;
+        private readonly Reader _reader;
 
         internal DataReader(MemoryPool<byte> pool, Reader reader)
         {

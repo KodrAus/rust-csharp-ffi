@@ -13,6 +13,11 @@ namespace Db.Storage
             _handle = handle ?? throw new ArgumentNullException(nameof(handle));
         }
 
+        public void Dispose()
+        {
+            _handle.Dispose();
+        }
+
         public void Remove(Key key)
         {
             unsafe
@@ -22,11 +27,6 @@ namespace Db.Storage
 
                 Bindings.db_delete_remove(_handle, (IntPtr) keyPtr);
             }
-        }
-
-        public void Dispose()
-        {
-            _handle.Dispose();
         }
     }
 }

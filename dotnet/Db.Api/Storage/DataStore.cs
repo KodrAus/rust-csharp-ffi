@@ -6,8 +6,8 @@ namespace Db.Api.Storage
 {
     public sealed class DataStore : IDisposable
     {
-        private readonly Store _store;
         private readonly MemoryPool<byte> _pool;
+        private readonly Store _store;
 
         public DataStore(MemoryPool<byte> pool, Store store)
         {

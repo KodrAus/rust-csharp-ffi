@@ -7,7 +7,7 @@ using Autofac.Features.OwnedInstances;
 
 namespace Db.Tests.Integration.Support
 {
-    internal class TestCaseRunner
+    class TestCaseRunner
     {
         private readonly IEnumerable<Func<Owned<TestCase>>> _tests;
 

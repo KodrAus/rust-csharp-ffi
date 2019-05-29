@@ -4,7 +4,7 @@ using Db.Tests.Integration.Api;
 
 namespace Db.Tests.Integration.Support
 {
-    internal sealed class TestCase
+    sealed class TestCase
     {
         private readonly Client _client;
         private readonly ServerProcess _server;

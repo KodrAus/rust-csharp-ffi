@@ -12,6 +12,11 @@ namespace Db.Storage
             _handle = handle ?? throw new ArgumentNullException(nameof(handle));
         }
 
+        public void Dispose()
+        {
+            _handle.Dispose();
+        }
+
         public ReadResult TryReadNext(Span<byte> buffer)
         {
             unsafe
@@ -32,11 +37,6 @@ namespace Db.Storage
                     return ReadResult.Data(new Key(key), buffer, ..(int) actualValueLength);
                 }
             }
-        }
-
-        public void Dispose()
-        {
-            _handle.Dispose();
         }
     }
 }

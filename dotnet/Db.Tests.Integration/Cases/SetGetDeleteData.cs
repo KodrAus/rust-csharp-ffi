@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Db.Tests.Integration.Cases
 {
-    internal class SetGetDeleteData : ITestCase
+    class SetGetDeleteData : ITestCase
     {
         public async Task Execute(Client client)
         {

@@ -8,8 +8,11 @@ namespace Db.Api.Storage
 {
     public sealed class Data : IDisposable
     {
-        private static byte[] _keyPropertyName = Encoding.UTF8.GetBytes("key");
-        private static byte[] _valuePropertyName = Encoding.UTF8.GetBytes("value");
+        private static readonly byte[] _keyPropertyName = Encoding.UTF8.GetBytes("key");
+        private static readonly byte[] _valuePropertyName = Encoding.UTF8.GetBytes("value");
+        private readonly IMemoryOwner<byte> _ownedValueMemory;
+
+        private readonly JsonDocument _value;
 
         public Data(Key key, IMemoryOwner<byte> value)
         {
@@ -31,13 +34,16 @@ namespace Db.Api.Storage
             _value = JsonDocument.Parse(RawValue);
         }
 
-        private readonly JsonDocument _value;
-        private readonly IMemoryOwner<byte> _ownedValueMemory;
-
         public Key Key { get; }
 
         public JsonElement Value => _value.RootElement;
         internal ReadOnlyMemory<byte> RawValue { get; }
+
+        public void Dispose()
+        {
+            _value.Dispose();
+            _ownedValueMemory?.Dispose();
+        }
 
         public void WriteAsValue(Utf8JsonWriter writer)
         {
@@ -47,12 +53,6 @@ namespace Db.Api.Storage
             Value.WriteAsProperty(_valuePropertyName, writer);
 
             writer.WriteEndObject();
-        }
-
-        public void Dispose()
-        {
-            _value.Dispose();
-            _ownedValueMemory?.Dispose();
         }
     }
 }

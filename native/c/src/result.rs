@@ -319,7 +319,7 @@ mod tests {
             // Set the last result for this thread
             // Normally you'd return from here
             // But we're just going to leave the error
-            let res = DbResult::catch(|| {
+            let _ = DbResult::catch(|| {
                 DbResult::internal_error().context(TestInnerError::Variant);
 
                 DbResult::ok()
