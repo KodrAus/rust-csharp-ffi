@@ -1,23 +1,17 @@
-import { Component, OnInit, Output, EventEmitter, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, ElementRef, ViewChild } from '@angular/core';
 
 import { Item } from '../item';
 
 @Component({
-  selector: 'data-item',
+  selector: 'app-data-item',
   templateUrl: './item.component.html',
   styleUrls: ['./item.component.sass'],
-  inputs: [
-    'item'
-  ]
 })
 export class ItemComponent implements OnInit {
+  @Input() item: Item;
   @Output() set = new EventEmitter<Item>();
   @Output() delete = new EventEmitter<Item>();
-  @ViewChild('title') title: ElementRef; 
-
-  item: Item;
-
-  constructor() { }
+  @ViewChild('title') title: ElementRef;
 
   ngOnInit() {
     if (this.item.isNew) {

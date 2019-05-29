@@ -7,9 +7,9 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Data } from './data';
 
-type Value = {
-  title: string,
-  description: string
+interface Value {
+  title: string;
+  description: string;
 }
 
 type Get = [
@@ -24,7 +24,7 @@ type Set = Value;
 function getRandomInt(min, max): number {
   min = Math.ceil(min);
   max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+  return Math.floor(Math.random() * (max - min)) + min;
 }
 
 @Injectable({

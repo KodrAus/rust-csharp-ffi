@@ -1,25 +1,16 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 
 import { Item } from '../item';
 
 @Component({
-  selector: 'data-list',
+  selector: 'app-data-list',
   templateUrl: './list.component.html',
-  styleUrls: ['./list.component.sass'],
-  inputs: [
-    'items'
-  ]
+  styleUrls: ['./list.component.sass']
 })
-export class ListComponent implements OnInit {
+export class ListComponent {
+  @Input() items: Item[] = [];
   @Output() set = new EventEmitter<Item>();
   @Output() delete = new EventEmitter<Item>();
-
-  items: Item[] = [];
-
-  constructor() { }
-
-  ngOnInit() {
-  }
 
   onSet(item: Item) {
     this.set.emit(item);
