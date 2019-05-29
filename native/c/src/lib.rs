@@ -81,18 +81,18 @@ ffi_no_catch! {
         DbResult::with_last_result(|last_result| {
             let (value, error) = last_result.unwrap_or((DbResult::ok(), None));
 
-            unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => result.assign(value));
+            unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => result.init(value));
 
             if let Some(error) = error {
-                unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => actual_message_len.assign(error.len()));
+                unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => actual_message_len.init(error.len()));
 
                 if message_buf_len < error.len() {
                     return DbResult::buffer_too_small();
                 }
 
-                unsafe_block!("The buffer lives as long as `db_last_result` and the length is within the buffer" => message_buf.assign_slice(error.as_bytes()));
+                unsafe_block!("The buffer is valid for writes and the length is within the buffer" => message_buf.init_slice(error.as_bytes()));
             } else {
-                unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => actual_message_len.assign(0));
+                unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => actual_message_len.init(0));
             }
 
             DbResult::ok()
@@ -109,7 +109,7 @@ ffi! {
             inner: store::Store::open(path)?,
         });
 
-        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => store.assign(handle));
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => store.init(handle));
 
         DbResult::ok()
     }
@@ -130,7 +130,7 @@ ffi! {
             inner: thread_bound::DeferredCleanup::new(store.inner.read_begin()?),
         });
 
-        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => reader.assign(handle));
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => reader.init(handle));
 
         DbResult::ok()
     }
@@ -192,7 +192,7 @@ ffi! {
             inner: store.inner.write_begin()?,
         });
 
-        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => writer.assign(handle));
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => writer.init(handle));
 
         DbResult::ok()
     }
@@ -232,7 +232,7 @@ ffi! {
             inner: store.inner.delete_begin()?,
         });
 
-        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => deleter.assign(handle));
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => deleter.init(handle));
 
         DbResult::ok()
     }

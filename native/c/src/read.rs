@@ -58,13 +58,13 @@ pub(super) fn into_fixed_buffer(
 
     // If we wrote more bytes than the buffer could fit, return the required size
     if written > buf.len() {
-        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => actual_value_len.assign(written));
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => actual_value_len.init(written));
 
         DbResult::buffer_too_small()
     // The entire payload fit in the buffer
     } else {
-        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => actual_value_len.assign(written));
-        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => key.assign(DbKey(data.key.to_bytes())));
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => actual_value_len.init(written));
+        unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => key.init(DbKey(data.key.to_bytes())));
 
         DbResult::ok()
     }
