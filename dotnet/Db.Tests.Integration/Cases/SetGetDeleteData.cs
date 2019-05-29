@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Db.Tests.Integration.Cases
 {
-    class SetGetDeleteData : ITestCase
+    internal class SetGetDeleteData : ITestCase
     {
         public async Task Execute(Client client)
         {
@@ -23,7 +23,7 @@ namespace Db.Tests.Integration.Cases
             await client.Remove(id);
 
             var remaining = await client.GetAll();
-            
+
             Assert.Equal(0, remaining.Length);
         }
     }

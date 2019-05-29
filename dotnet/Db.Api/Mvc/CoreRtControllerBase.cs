@@ -17,7 +17,7 @@ namespace Db.Api.Mvc
         {
             return new DeferredExecutionResult(exec);
         }
-        
+
         protected void AllowSynchronousIO()
         {
             var syncIoFeature = HttpContext.Features.Get<IHttpBodyControlFeature>();

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Db.Storage.Native
 {
-    class StoreHandle : SafeHandle
+    internal class StoreHandle : SafeHandle
     {
         private StoreHandle()
             : base(IntPtr.Zero, true)
@@ -14,12 +14,12 @@ namespace Db.Storage.Native
 
         protected override bool ReleaseHandle()
         {
-            if (handle == IntPtr.Zero) return true;
+            //if (handle == IntPtr.Zero) return true;
 
-            var h = handle;
-            handle = IntPtr.Zero;
+            //var h = handle;
+            //handle = IntPtr.Zero;
 
-            Bindings.db_store_close(h, false);
+            Bindings.db_store_close(handle, false);
             return true;
         }
     }

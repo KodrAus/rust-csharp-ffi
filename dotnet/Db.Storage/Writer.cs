@@ -15,8 +15,6 @@ namespace Db.Storage
 
         public void Set(Key key, ReadOnlySpan<byte> value)
         {
-            EnsureOpen();
-
             unsafe
             {
                 var rawKey = key.Value;
@@ -29,15 +27,9 @@ namespace Db.Storage
             }
         }
 
-        private void EnsureOpen()
-        {
-            if (_handle.IsClosed)
-                throw new ObjectDisposedException(nameof(Writer), "The writer has been disposed.");
-        }
-
         public void Dispose()
         {
-            if (!_handle.IsInvalid) _handle.Dispose();
+            _handle.Dispose();
         }
     }
 }

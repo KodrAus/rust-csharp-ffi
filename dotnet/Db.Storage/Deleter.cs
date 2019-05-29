@@ -15,8 +15,6 @@ namespace Db.Storage
 
         public void Remove(Key key)
         {
-            EnsureOpen();
-
             unsafe
             {
                 var rawKey = key.Value;
@@ -26,15 +24,9 @@ namespace Db.Storage
             }
         }
 
-        private void EnsureOpen()
-        {
-            if (_handle.IsClosed)
-                throw new ObjectDisposedException(nameof(Deleter), "The deleter has been disposed.");
-        }
-
         public void Dispose()
         {
-            if (!_handle.IsInvalid) _handle.Dispose();
+            _handle.Dispose();
         }
     }
 }

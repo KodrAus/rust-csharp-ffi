@@ -9,8 +9,6 @@ namespace Db.Storage
         private StoreHandle _handle;
         private string _path;
 
-        public bool IsOpen => !_handle.IsClosed;
-
         public static Store Open(string path)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
@@ -33,42 +31,25 @@ namespace Db.Storage
 
         public Reader BeginRead()
         {
-            EnsureOpen();
-
             Bindings.db_read_begin(_handle, out var readerHandle);
             return new Reader(readerHandle);
         }
 
         public Writer BeginWrite()
         {
-            EnsureOpen();
-
             Bindings.db_write_begin(_handle, out var writerHandle);
             return new Writer(writerHandle);
         }
 
         public Deleter BeginDelete()
         {
-            EnsureOpen();
-
             Bindings.db_delete_begin(_handle, out var deleterHandle);
             return new Deleter(deleterHandle);
         }
 
-        public void Close()
-        {
-            Dispose();
-        }
-
-        private void EnsureOpen()
-        {
-            if (_handle.IsClosed)
-                throw new ObjectDisposedException(nameof(Store), $"The store at `{_path}` has been disposed.");
-        }
-
         public void Dispose()
         {
-            if (!_handle.IsInvalid) _handle.Dispose();
+            _handle.Dispose();
         }
     }
 }

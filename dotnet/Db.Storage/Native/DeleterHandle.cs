@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Db.Storage.Native
 {
-    class DeleterHandle : SafeHandle
+    internal class DeleterHandle : SafeHandle
     {
         private DeleterHandle()
             : base(IntPtr.Zero, true)
