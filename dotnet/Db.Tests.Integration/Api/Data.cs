@@ -1,6 +1,6 @@
 namespace Db.Tests.Integration.Api
 {
-    class Data
+    internal class Data
     {
         public Data(string key, object value)
         {

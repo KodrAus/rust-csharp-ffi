@@ -19,9 +19,9 @@ namespace Db.Api
             try
             {
                 Log.Information("Starting up...");
-            
+
                 CreateWebHostBuilder(args).Build().Run();
-            
+
                 Log.Information("Shut down cleanly");
             }
             finally

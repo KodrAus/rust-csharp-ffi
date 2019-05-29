@@ -3,7 +3,7 @@ using Db.Tests.Integration.Support;
 
 namespace Db.Tests.Integration
 {
-    class Program
+    internal class Program
     {
         private static int Main(string[] args)
         {

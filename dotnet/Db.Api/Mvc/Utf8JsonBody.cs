@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Db.Api.Mvc
 {
-    class Utf8JsonBody : IMemoryOwner<byte>
+    internal class Utf8JsonBody : IMemoryOwner<byte>
     {
         private static ReadOnlySpan<byte> Utf8Bom => new byte[] {0xEF, 0xBB, 0xBF};
         private const int UnseekableStreamInitialRentSize = 4096;

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Db.Storage.Native
 {
-    class WriterHandle : SafeHandle
+    internal class WriterHandle : SafeHandle
     {
         private WriterHandle()
             : base(IntPtr.Zero, true)

@@ -14,8 +14,6 @@ namespace Db.Storage
 
         public ReadResult TryReadNext(Span<byte> buffer)
         {
-            EnsureOpen();
-
             unsafe
             {
                 fixed (byte* bufferPtr = buffer)
@@ -36,15 +34,9 @@ namespace Db.Storage
             }
         }
 
-        private void EnsureOpen()
-        {
-            if (_handle.IsClosed)
-                throw new ObjectDisposedException(nameof(Reader), "The reader has been disposed.");
-        }
-
         public void Dispose()
         {
-            if (!_handle.IsInvalid) _handle.Dispose();
+            _handle.Dispose();
         }
     }
 }

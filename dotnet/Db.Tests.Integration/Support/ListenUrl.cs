@@ -2,7 +2,7 @@ using System.Threading;
 
 namespace Db.Tests.Integration.Support
 {
-    class ListenUrl
+    internal class ListenUrl
     {
         private static int _nextPort = 50000;
         private readonly string _value;

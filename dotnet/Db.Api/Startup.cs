@@ -56,7 +56,7 @@ namespace Db.Api
                     }
                 }
             });
-            
+
             app.UseCors();
             app.UseDefaultFiles();
             app.UseStaticFiles();

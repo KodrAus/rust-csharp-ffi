@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace Db.Tests.Integration.Support
 {
-    class ServerProcess : IDisposable
+    internal class ServerProcess : IDisposable
     {
         private readonly ManualResetEvent _errorComplete = new ManualResetEvent(false);
         private readonly StringWriter _output = new StringWriter();

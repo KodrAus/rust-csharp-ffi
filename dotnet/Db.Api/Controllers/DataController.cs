@@ -29,7 +29,7 @@ namespace Db.Api.Controllers
             return Defer(async ctx =>
             {
                 var body = ctx.Response.Body;
-                
+
                 using var reader = outerReader;
                 using var writer = new Utf8JsonWriter(body);
 
@@ -65,7 +65,7 @@ namespace Db.Api.Controllers
         public ActionResult Remove(string key)
         {
             using var remove = _store.BeginDelete();
-            
+
             remove.Remove(new Key(key));
 
             return Ok();

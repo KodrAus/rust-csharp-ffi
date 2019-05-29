@@ -11,7 +11,7 @@ namespace Db.Storage.Native
 #if AOT
         const string NativeLibrary = "*";
 #elif WINDOWS
-        const string NativeLibrary = "Native/dbc.dll";
+        private const string NativeLibrary = "Native/dbc.dll";
 #elif LINUX
         const string NativeLibrary = "Native/libdbc.so";
 #elif MACOS
@@ -169,7 +169,7 @@ namespace Db.Storage.Native
         {
             return MaybeCheck(_db_test_error(), check);
         }
-        
+
         [DllImport(NativeLibrary, EntryPoint = "db_test_ok", ExactSpelling = true,
             CallingConvention = CallingConvention.Cdecl)]
         private static extern DbResult _db_test_ok();
