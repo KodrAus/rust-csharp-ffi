@@ -13,14 +13,24 @@ using System.Threading.Tasks;
 
 namespace Db.Api.Mvc
 {
-    internal class Utf8JsonBody : IMemoryOwner<byte>
+    class Utf8JsonBody : IMemoryOwner<byte>
     {
-        private static ReadOnlySpan<byte> Utf8Bom => new byte[] {0xEF, 0xBB, 0xBF};
         private const int UnseekableStreamInitialRentSize = 4096;
 
         private ArraySegment<byte> _segment;
+        private static ReadOnlySpan<byte> Utf8Bom => new byte[] {0xEF, 0xBB, 0xBF};
 
         public Memory<byte> Memory => _segment.AsMemory();
+
+        public void Dispose()
+        {
+            if (_segment != null)
+            {
+                _segment.AsSpan().Clear();
+                ArrayPool<byte>.Shared.Return(_segment.Array);
+                _segment = null;
+            }
+        }
 
         public static async Task<Utf8JsonBody>
             ReadToEndAsync(
@@ -103,16 +113,6 @@ namespace Db.Api.Mvc
                 ArrayPool<byte>.Shared.Return(rented);
 
                 throw;
-            }
-        }
-
-        public void Dispose()
-        {
-            if (_segment != null)
-            {
-                _segment.AsSpan().Clear();
-                ArrayPool<byte>.Shared.Return(_segment.Array);
-                _segment = null;
             }
         }
     }

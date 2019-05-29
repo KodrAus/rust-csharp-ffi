@@ -7,7 +7,11 @@ namespace Db.Storage
     public sealed class Store : IDisposable
     {
         private StoreHandle _handle;
-        private string _path;
+
+        public void Dispose()
+        {
+            _handle.Dispose();
+        }
 
         public static Store Open(string path)
         {
@@ -22,7 +26,6 @@ namespace Db.Storage
 
                     return new Store
                     {
-                        _path = path,
                         _handle = handle
                     };
                 }
@@ -45,11 +48,6 @@ namespace Db.Storage
         {
             Bindings.db_delete_begin(_handle, out var deleterHandle);
             return new Deleter(deleterHandle);
-        }
-
-        public void Dispose()
-        {
-            _handle.Dispose();
         }
     }
 }

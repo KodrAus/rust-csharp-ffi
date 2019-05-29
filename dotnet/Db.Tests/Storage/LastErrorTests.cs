@@ -1,7 +1,7 @@
-#if DEBUG
 using System;
-using Xunit;
 using Db.Storage.Native;
+#if DEBUG
+using Xunit;
 
 namespace Db.Tests.Storage
 {
@@ -16,20 +16,20 @@ namespace Db.Tests.Storage
         }
 
         [Fact]
-        public void NativeErrorsUseDefaultMessageWhenLastResultChangesToOk()
+        public void NativeErrorsUseDefaultMessageWhenLastResultChangesToNewError()
         {
             var nativeResult = Bindings.db_test_error(false);
-            Bindings.db_test_ok();
+            Bindings.db_test_error(false);
 
             var nativeException = Assert.Throws<Exception>(() => nativeResult.Check());
             Assert.Equal("Native storage failed with InternalError", nativeException.Message);
         }
 
         [Fact]
-        public void NativeErrorsUseDefaultMessageWhenLastResultChangesToNewError()
+        public void NativeErrorsUseDefaultMessageWhenLastResultChangesToOk()
         {
             var nativeResult = Bindings.db_test_error(false);
-            Bindings.db_test_error(false);
+            Bindings.db_test_ok();
 
             var nativeException = Assert.Throws<Exception>(() => nativeResult.Check());
             Assert.Equal("Native storage failed with InternalError", nativeException.Message);

@@ -3,7 +3,7 @@ using Db.Tests.Integration.Api;
 
 namespace Db.Tests.Integration.Support
 {
-    internal interface ITestCase
+    interface ITestCase
     {
         Task Execute(Client client);
     }

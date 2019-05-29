@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Db.Storage.Native
 {
-    internal static class LastResult
+    static class LastResult
     {
         public static (DbResult, string) GetLastResult()
         {

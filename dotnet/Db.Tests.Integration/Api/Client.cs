@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Db.Tests.Integration.Api
 {
-    internal class Client : IDisposable
+    class Client : IDisposable
     {
         private readonly Uri _baseUri;
         private readonly HttpClient _client;

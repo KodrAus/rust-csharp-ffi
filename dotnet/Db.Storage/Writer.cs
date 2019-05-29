@@ -13,6 +13,11 @@ namespace Db.Storage
             _handle = handle ?? throw new ArgumentNullException(nameof(handle));
         }
 
+        public void Dispose()
+        {
+            _handle.Dispose();
+        }
+
         public void Set(Key key, ReadOnlySpan<byte> value)
         {
             unsafe
@@ -25,11 +30,6 @@ namespace Db.Storage
                     Bindings.db_write_set(_handle, (IntPtr) keyPtr, (IntPtr) valuePtr, (UIntPtr) value.Length);
                 }
             }
-        }
-
-        public void Dispose()
-        {
-            _handle.Dispose();
         }
     }
 }

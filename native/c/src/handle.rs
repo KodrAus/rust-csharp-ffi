@@ -7,9 +7,14 @@ use std::{
         RefUnwindSafe,
         UnwindSafe,
     },
+    ptr,
+    slice,
 };
 
-use super::thread_bound::ThreadBound;
+use super::{
+    is_null::IsNull,
+    thread_bound::ThreadBound,
+};
 
 /*
 The handles here are wrappers for a shared `&T` and an exclusive `&mut T`.
@@ -33,12 +38,6 @@ unsafe_impl!("The handle is semantically `&T`" => impl<T: ?Sized> Send for Handl
 unsafe_impl!("The handle is semantically `&T`" => impl<T: ?Sized> Sync for HandleShared<T> where for<'a> &'a T: Sync {});
 
 impl<T: ?Sized + RefUnwindSafe> UnwindSafe for HandleShared<T> {}
-
-impl<T: ?Sized> HandleShared<T> {
-    pub(super) fn as_ptr(&self) -> *const T {
-        self.0
-    }
-}
 
 impl<T> HandleShared<T>
 where
@@ -98,12 +97,6 @@ unsafe_impl!("The handle uses `ThreadBound` for synchronization" => impl<T: ?Siz
 
 impl<T: ?Sized + RefUnwindSafe> UnwindSafe for HandleExclusive<T> {}
 
-impl<T: ?Sized> HandleExclusive<T> {
-    pub(super) fn as_ptr(&self) -> *mut ThreadBound<T> {
-        self.0
-    }
-}
-
 impl<T> HandleExclusive<T>
 where
     HandleExclusive<T>: Send + Sync,
@@ -159,6 +152,91 @@ where
 }
 
 /**
-A parameter that will have a value assigned during the FFI call.
+An initialized parameter passed by shared reference.
 */
-pub type Out<T> = *mut T;
+#[repr(transparent)]
+pub struct Ref<T: ?Sized>(*const T);
+
+impl<T: ?Sized> Ref<T> {
+    unsafe_fn!("The pointer must be nonnull and will remain valid" => pub fn as_ref(&self) -> &T {
+        &*self.0
+    });
+}
+
+impl Ref<u8> {
+    unsafe_fn!("The pointer must be nonnull, the length is correct, and will remain valid" => pub fn as_bytes(&self, len: usize) -> &[u8] {
+        slice::from_raw_parts(self.0, len)
+    });
+}
+
+/**
+An initialized parameter passed by exclusive reference.
+*/
+#[repr(transparent)]
+pub struct RefMut<T: ?Sized>(*mut T);
+
+impl<T: ?Sized> RefMut<T> {
+    unsafe_fn!("The pointer must be nonnull and will remain valid" => pub fn as_mut(&mut self) -> &mut T {
+        &mut *self.0
+    });
+}
+
+impl RefMut<u8> {
+    unsafe_fn!("The pointer must be nonnull, the length is correct, and will remain valid" => pub fn as_bytes_mut(&mut self, len: usize) -> &mut [u8] {
+        slice::from_raw_parts_mut(self.0, len)
+    });
+}
+
+/**
+An uninitialized, assignable out parameter.
+
+The inner value is not guaranteed to be initialized.
+*/
+#[repr(transparent)]
+pub struct Out<T: ?Sized>(*mut T);
+
+impl<T> Out<T> {
+    unsafe_fn!("The pointer must be nonnull and valid for writes" => pub fn assign(&mut self, value: T) {
+        ptr::write(self.0, value);
+    });
+
+    unsafe_fn!("The pointer must be nonnull, not overlap the slice, must be valid for the length of the slice, and valid for writes" => pub fn assign_slice(&mut self, value: &[T]) {
+        ptr::copy_nonoverlapping(value.as_ptr(), self.0, value.len());
+    });
+}
+
+impl Out<u8> {
+    unsafe_fn!("The slice must never be read from and must be valid for the length of the slice" => pub fn as_uninit_bytes_mut(&mut self, len: usize) -> &mut [u8] {
+        slice::from_raw_parts_mut(self.0, len)
+    });
+}
+
+impl<T: ?Sized> IsNull for HandleExclusive<T> {
+    fn is_null(&self) -> bool {
+        self.0.is_null()
+    }
+}
+
+impl<T: ?Sized + Sync> IsNull for HandleShared<T> {
+    fn is_null(&self) -> bool {
+        self.0.is_null()
+    }
+}
+
+impl<T: ?Sized> IsNull for Ref<T> {
+    fn is_null(&self) -> bool {
+        self.0.is_null()
+    }
+}
+
+impl<T: ?Sized + Sync> IsNull for RefMut<T> {
+    fn is_null(&self) -> bool {
+        self.0.is_null()
+    }
+}
+
+impl<T: ?Sized> IsNull for Out<T> {
+    fn is_null(&self) -> bool {
+        self.0.is_null()
+    }
+}

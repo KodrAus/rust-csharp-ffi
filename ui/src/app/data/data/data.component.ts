@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 import { DataService } from '../data.service';
-import { Data } from '../data';
+import { Document } from '../document';
 import { Item } from '../item';
 
 @Component({
@@ -12,7 +12,7 @@ import { Item } from '../item';
 export class DataComponent implements OnInit {
   data: Item[] = [];
 
-  constructor(private dataService: DataService) { }
+  constructor(private dataService: DataService<Document>) { }
 
   ngOnInit() {
     this.getData();
@@ -20,11 +20,12 @@ export class DataComponent implements OnInit {
 
   getData() {
     this.dataService.getData()
-    .subscribe((data: Data[]) => {
-      this.data = data.map(value => ({
+    .subscribe(data => {
+      this.data = data.map(doc => ({
         isNew: false,
         isSaving: false,
-        value
+        key: doc.key,
+        value: doc.value
       }));
     });
   }
@@ -34,8 +35,8 @@ export class DataComponent implements OnInit {
       {
         isNew: true,
         isSaving: false,
+        key: this.dataService.nextKey(),
         value: {
-          id: this.dataService.nextId(),
           title: '',
           description: ''
         }
@@ -46,7 +47,7 @@ export class DataComponent implements OnInit {
 
   setData(item: Item) {
     item.isSaving = true;
-    return this.dataService.setData(item.value).subscribe(() => {
+    return this.dataService.setData({ key: item.key, value: item.value }).subscribe(() => {
       item.isSaving = false;
       item.isNew = false;
     });
@@ -54,13 +55,13 @@ export class DataComponent implements OnInit {
 
   deleteData(item: Item) {
     if (item.isNew) {
-      this.data = this.data.filter(existing => existing.value.id !== item.value.id);
+      this.data = this.data.filter(existing => existing.key !== item.key);
       return;
     }
 
     item.isSaving = true;
-    return this.dataService.deleteData(item.value.id).subscribe(() => {
-      this.data = this.data.filter(existing => existing.value.id !== item.value.id);
+    return this.dataService.deleteData(item.key).subscribe(() => {
+      this.data = this.data.filter(existing => existing.key !== item.key);
     });
   }
 }

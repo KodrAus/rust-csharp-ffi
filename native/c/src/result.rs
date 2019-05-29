@@ -177,7 +177,7 @@ impl DbResult {
         })
     }
 
-    pub(super) fn with_last_result<R>(f: impl Fn(Option<(DbResult, Option<&str>)>) -> R) -> R {
+    pub(super) fn with_last_result<R>(f: impl FnOnce(Option<(DbResult, Option<&str>)>) -> R) -> R {
         LAST_RESULT.with(|last_result| {
             let last_result = last_result.borrow();
 
@@ -319,7 +319,7 @@ mod tests {
             // Set the last result for this thread
             // Normally you'd return from here
             // But we're just going to leave the error
-            let res = DbResult::catch(|| {
+            let _ = DbResult::catch(|| {
                 DbResult::internal_error().context(TestInnerError::Variant);
 
                 DbResult::ok()

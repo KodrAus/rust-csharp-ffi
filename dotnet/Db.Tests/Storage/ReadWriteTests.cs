@@ -1,13 +1,38 @@
 using System;
 using System.Linq;
-using Db.Tests.Support;
 using Db.Storage;
+using Db.Tests.Support;
 using Xunit;
 
 namespace Db.Tests.Storage
 {
     public class ReadWriteTests
     {
+        [Fact]
+        public void AttemptToReadWithZeroSizedBufferFails()
+        {
+            var events = new[]
+            {
+                Some.Event(),
+                Some.Event()
+            };
+
+            using (var store = new TempStore())
+            {
+                using (var writer = store.Store.BeginWrite())
+                {
+                    foreach (var (key, payload) in events) writer.Set(key, payload);
+                }
+
+                using (var reader = store.Store.BeginRead())
+                {
+                    var readInto = new byte[0];
+
+                    Assert.Throws<Exception>(() => reader.TryReadNext(readInto.AsSpan()));
+                }
+            }
+        }
+
         [Fact]
         public void WrittenDataCanBeRead()
         {
@@ -50,31 +75,6 @@ namespace Db.Tests.Storage
                 }
 
                 Assert.Equal(events.Length, count);
-            }
-        }
-
-        [Fact]
-        public void AttemptToReadWithZeroSizedBufferFails()
-        {
-            var events = new[]
-            {
-                Some.Event(),
-                Some.Event()
-            };
-
-            using (var store = new TempStore())
-            {
-                using (var writer = store.Store.BeginWrite())
-                {
-                    foreach (var (key, payload) in events) writer.Set(key, payload);
-                }
-
-                using (var reader = store.Store.BeginRead())
-                {
-                    var readInto = new byte[0];
-
-                    Assert.Throws<Exception>(() => reader.TryReadNext(readInto.AsSpan()));
-                }
             }
         }
     }

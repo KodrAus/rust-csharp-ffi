@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
-[assembly: InternalsVisibleToAttribute("Db.Tests")]
+[assembly: InternalsVisibleTo("Db.Tests")]
 
 namespace Db.Storage.Native
 {
-    internal static class Bindings
+    static class Bindings
     {
 #if AOT
         const string NativeLibrary = "*";
