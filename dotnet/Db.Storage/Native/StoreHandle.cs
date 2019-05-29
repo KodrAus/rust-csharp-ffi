@@ -14,11 +14,6 @@ namespace Db.Storage.Native
 
         protected override bool ReleaseHandle()
         {
-            //if (handle == IntPtr.Zero) return true;
-
-            //var h = handle;
-            //handle = IntPtr.Zero;
-
             Bindings.db_store_close(handle, false);
             return true;
         }
