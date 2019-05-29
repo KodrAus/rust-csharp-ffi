@@ -1,17 +1,15 @@
-use std::{
-    panic::{
-        RefUnwindSafe,
-        UnwindSafe,
-    },
+use std::panic::{
+    RefUnwindSafe,
+    UnwindSafe,
 };
 
 use crate::{
     data::Data,
     error::Error,
     store::{
-        Store,
         Db,
-    }
+        Store,
+    },
 };
 
 pub struct Writer {

@@ -1,16 +1,14 @@
-use std::{
-    panic::{
-        RefUnwindSafe,
-        UnwindSafe,
-    },
+use std::panic::{
+    RefUnwindSafe,
+    UnwindSafe,
 };
 
 use crate::{
     data::Key,
     error::Error,
     store::{
-        Store,
         Db,
+        Store,
     },
 };
 

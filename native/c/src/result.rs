@@ -3,13 +3,13 @@ use std::{
     cell::RefCell,
     fmt::Write,
     ops::Try,
-    sync::atomic::{
-        AtomicU32,
-        Ordering,
-    },
     panic::{
         catch_unwind,
         UnwindSafe,
+    },
+    sync::atomic::{
+        AtomicU32,
+        Ordering,
     },
 };
 
@@ -99,7 +99,7 @@ impl DbResult {
 
     pub(super) fn internal_error() -> Self {
         DbResult {
-            kind:  Kind::InternalError,
+            kind: Kind::InternalError,
             id: next_err_id(),
         }
     }
@@ -118,15 +118,15 @@ impl DbResult {
     }
 
     pub(super) fn context(self, e: impl Fail) -> Self {
-        assert!(self.as_err().is_some(), "context can only be attached to errors");
+        assert!(
+            self.as_err().is_some(),
+            "context can only be attached to errors"
+        );
 
         let err = Some(format_error(&e));
 
         LAST_RESULT.with(|last_result| {
-            *last_result.borrow_mut() = Some(LastResult {
-                value: self,
-                err,
-            });
+            *last_result.borrow_mut() = Some(LastResult { value: self, err });
         });
 
         self
@@ -182,11 +182,10 @@ impl DbResult {
             let last_result = last_result.borrow();
 
             let last_result = last_result.as_ref().map(|last_result| {
-                debug_assert!(
-                    last_result.value.as_err().map(|_| ()) == last_result.err.as_ref().map(|_| ()),
-                    "{:?} either is ok with an error message, or is an error without a message", last_result);
-
-                let msg = last_result.err.as_ref().map(|msg| msg.as_ref());
+                let msg = last_result
+                    .value
+                    .as_err()
+                    .and_then(|_| last_result.err.as_ref().map(|msg| msg.as_ref()));
 
                 (last_result.value, msg)
             });
@@ -289,8 +288,11 @@ fn extract_panic(err: &Box<dyn Any + Send + 'static>) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use std::mem;
     use failure_derive::*;
+    use std::{
+        mem,
+        thread,
+    };
 
     use super::*;
 
@@ -312,13 +314,47 @@ mod tests {
     }
 
     #[test]
-    fn last_result_catch_ok() {
-        let result = DbResult::catch(|| DbResult::Ok);
+    fn db_result_err_is_none_if_kind_is_ok() {
+        thread::spawn(|| {
+            // Set the last result for this thread
+            // Normally you'd return from here
+            // But we're just going to leave the error
+            let res = DbResult::catch(|| {
+                DbResult::internal_error().context(TestInnerError::Variant);
 
-        assert_eq!(DbResult::Ok, result);
+                DbResult::ok()
+            });
+
+            // We should have an error stored
+            LAST_RESULT.with(|last_result| {
+                let last_result = last_result.borrow();
+
+                assert!(last_result.as_ref().unwrap().err.is_some());
+            });
+
+            // We don't surface that error in with_last_result
+            DbResult::with_last_result(|last_result| {
+                let (_, err) = last_result.unwrap();
+
+                assert!(err.is_none());
+            });
+        })
+        .join()
+        .unwrap()
+    }
+
+    #[test]
+    fn last_result_catch_ok() {
+        let result = DbResult::catch(|| DbResult::ok());
+
+        assert_eq!(Kind::Ok, result.kind);
 
         DbResult::with_last_result(|last_result| {
-            assert_eq!(Some((DbResult::Ok, None)), last_result);
+            assert_match!(Some((result, err)) = last_result => {
+                assert_eq!(Kind::Ok, result.kind);
+
+                assert!(err.is_none());
+            });
         });
     }
 
@@ -330,11 +366,11 @@ mod tests {
             unreachable!()
         });
 
-        assert_eq!(DbResult::internal_error(), result);
+        assert_eq!(Kind::InternalError, result.kind);
 
         DbResult::with_last_result(|last_result| {
             assert_match!(Some((result, err)) = last_result => {
-                assert_eq!(DbResult::internal_error(), result);
+                assert_eq!(Kind::InternalError, result.kind);
 
                 assert!(err.is_some());
             });
@@ -343,13 +379,13 @@ mod tests {
 
     #[test]
     fn last_result_catch_err_return() {
-        let result = DbResult::catch(|| DbResult::ArgumentNull);
+        let result = DbResult::catch(|| DbResult::argument_null());
 
-        assert_eq!(DbResult::ArgumentNull, result);
+        assert_eq!(Kind::ArgumentNull, result.kind);
 
         DbResult::with_last_result(|last_result| {
             assert_match!(Some((result, err)) = last_result => {
-                assert_eq!(DbResult::ArgumentNull, result);
+                assert_eq!(Kind::ArgumentNull, result.kind);
 
                 assert!(err.is_some());
             });
@@ -360,11 +396,11 @@ mod tests {
     fn last_result_catch_panic() {
         let result = DbResult::catch(|| panic!("something didn't work"));
 
-        assert_eq!(DbResult::internal_error(), result);
+        assert_eq!(Kind::InternalError, result.kind);
 
         DbResult::with_last_result(|last_result| {
             assert_match!(Some((result, err)) = last_result => {
-                assert_eq!(DbResult::internal_error(), result);
+                assert_eq!(Kind::InternalError, result.kind);
 
                 assert!(err.is_some());
             });

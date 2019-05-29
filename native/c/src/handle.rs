@@ -106,7 +106,7 @@ impl<T: ?Sized> HandleExclusive<T> {
 
 impl<T> HandleExclusive<T>
 where
-    HandleExclusive<T>: Send  + Sync,
+    HandleExclusive<T>: Send + Sync,
 {
     pub(super) fn alloc(value: T) -> Self
     where
