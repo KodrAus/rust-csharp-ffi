@@ -1,7 +1,8 @@
-import { Data } from './data';
+import { Document } from './document';
 
 export class Item {
     isNew: boolean;
     isSaving: boolean;
-    value: Data;
+    key: string;
+    value: Document;
 }

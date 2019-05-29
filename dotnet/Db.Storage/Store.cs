@@ -7,7 +7,6 @@ namespace Db.Storage
     public sealed class Store : IDisposable
     {
         private StoreHandle _handle;
-        private string _path;
 
         public void Dispose()
         {
@@ -27,7 +26,6 @@ namespace Db.Storage
 
                     return new Store
                     {
-                        _path = path,
                         _handle = handle
                     };
                 }

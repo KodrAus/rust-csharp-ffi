@@ -206,7 +206,7 @@ impl<T> Out<T> {
 }
 
 impl Out<u8> {
-    unsafe_fn!("The slice must never be read from" => pub fn as_uninit_bytes_mut(&mut self, len: usize) -> &mut [u8] {
+    unsafe_fn!("The slice must never be read from and must be valid for the length of the slice" => pub fn as_uninit_bytes_mut(&mut self, len: usize) -> &mut [u8] {
         slice::from_raw_parts_mut(self.0, len)
     });
 }
