@@ -48,6 +48,14 @@ struct Registry(HashMap<ValueId, (UnsafeCell<*mut ()>, Box<Fn(&UnsafeCell<*mut (
 
 impl Drop for Registry {
     fn drop(&mut self) {
+        // Remove this thread from the garbage list
+        let thread_id = get_thread_id();
+        {
+            let mut garbage = GARBAGE.lock().expect("failed to lock garbage queue");
+            let _ = garbage.remove(&thread_id);
+        }
+
+        // Drop any remaining values in the registry
         for (_, value) in self.0.iter() {
             (value.1)(&value.0);
         }
@@ -122,13 +130,15 @@ The value is allocated in thread-local storage. When dropping, if the value
 is being accessed from a different thread it will be put onto a garbage queue
 for cleanup instead of being moved onto the current thread.
 */
-pub struct DeferredCleanup<T> {
+// NOTE: We require `T: 'static` because the value may live as long
+// as the current thread
+pub struct DeferredCleanup<T: 'static> {
     thread_id: ThreadId,
     value_id: ValueId,
     _m: PhantomData<*mut T>,
 }
 
-impl<T> Drop for DeferredCleanup<T> {
+impl<T: 'static> Drop for DeferredCleanup<T> {
     fn drop(&mut self) {
         if mem::needs_drop::<T>() {
             if self.is_valid() {
@@ -145,7 +155,7 @@ impl<T> Drop for DeferredCleanup<T> {
     }
 }
 
-impl<T> DeferredCleanup<T> {
+impl<T: 'static> DeferredCleanup<T> {
     pub fn new(value: T) -> Self {
         let thread_id = get_thread_id();
         let value_id = next_value_id();
@@ -244,10 +254,10 @@ impl<T> DeferredCleanup<T> {
 unsafe_impl!(
     "The inner value is pinned to the current thread and isn't actually sent. \
      Dropping from another thread will signal cleanup on the original" =>
-    impl<T> Send for DeferredCleanup<T> {});
+    impl<T: 'static> Send for DeferredCleanup<T> {});
 unsafe_impl!("The inner value can't actually be accessed concurrently" => impl<T> Sync for DeferredCleanup<T> {});
 
-impl<T> Deref for DeferredCleanup<T> {
+impl<T: 'static> Deref for DeferredCleanup<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -255,8 +265,80 @@ impl<T> Deref for DeferredCleanup<T> {
     }
 }
 
-impl<T> DerefMut for DeferredCleanup<T> {
+impl<T: 'static> DerefMut for DeferredCleanup<T> {
     fn deref_mut(&mut self) -> &mut T {
         self.with_value(|value| unsafe_block!("The borrow of self protects the inner value" => { &mut *value.get() }))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        thread,
+        sync::{
+            Arc,
+            Mutex
+        },
+    };
+
+    use super::*;
+
+    struct NeedsDrop(Arc<Mutex<bool>>);
+
+    impl Drop for NeedsDrop {
+        fn drop(&mut self) {
+            *self.0.lock().expect("failed to lock") = true;
+        }
+    }
+
+    #[test]
+    fn garbage_queue_is_cleaned_when_thread_exits() {
+        let dropped = Arc::new(Mutex::new(false));
+
+        let (pre_clean_len, thread_id) = {
+            let dropped = dropped.clone();
+
+            thread::spawn(move || {
+                let dropped = dropped.clone();
+
+                let deferred = DeferredCleanup::new(NeedsDrop(dropped.clone()));
+                let thread_id = get_thread_id();
+
+                // Move the deferred into another thread
+                // This will signal that it needs to be dropped
+                thread::spawn(move || { drop(deferred); })
+                    .join()
+                    .expect("failed to run inner thread");
+
+                // Ensure the value hasn't been dropped yet
+                {
+                    assert!(!*dropped.lock().expect("failed to lock"));
+                }
+
+                // Ensure we have garbage in the queue
+                let pre_clean_len = {
+                    let garbage = GARBAGE.lock().expect("failed to lock garbage");
+                    garbage.get(&thread_id).map(|queue| queue.len())
+                };
+
+                (pre_clean_len, thread_id)
+            }).join().expect("failed to run thread")
+        };
+
+        // Ensure the garbage has been cleaned
+        {
+            assert!(*dropped.lock().expect("failed to lock"));
+        }
+
+        // Ensure we had some garbage to clean
+        assert_eq!(Some(1), pre_clean_len);
+
+        // Ensure the queue for the thread is now gone
+        let len = {
+            let garbage = GARBAGE.lock().expect("failed to lock garbage");
+            garbage.get(&thread_id).map(|queue| queue.len())
+        };
+
+        assert_eq!(None, len);
     }
 }
