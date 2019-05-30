@@ -189,18 +189,16 @@ impl RefMut<u8> {
 
 /**
 An uninitialized, assignable out parameter.
-
-The inner value is not guaranteed to be initialized.
 */
 #[repr(transparent)]
 pub struct Out<T: ?Sized>(*mut T);
 
 impl<T> Out<T> {
-    unsafe_fn!("The pointer must be nonnull and valid for writes" => pub fn assign(&mut self, value: T) {
+    unsafe_fn!("The pointer must be nonnull and valid for writes" => pub fn init(&mut self, value: T) {
         ptr::write(self.0, value);
     });
 
-    unsafe_fn!("The pointer must be nonnull, not overlap the slice, must be valid for the length of the slice, and valid for writes" => pub fn assign_slice(&mut self, value: &[T]) {
+    unsafe_fn!("The pointer must be nonnull, not overlap the slice, must be valid for the length of the slice, and valid for writes" => pub fn init_slice(&mut self, value: &[T]) {
         ptr::copy_nonoverlapping(value.as_ptr(), self.0, value.len());
     });
 }
