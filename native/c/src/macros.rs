@@ -12,7 +12,7 @@ macro_rules! ffi {
         $(
             #[allow(unsafe_code, unused_attributes)]
             #[no_mangle]
-            pub unsafe extern "C" fn $name( $($arg_ident : $arg_ty),* ) -> DbResult {
+            pub unsafe extern "cdecl" fn $name( $($arg_ident : $arg_ty),* ) -> DbResult {
                 #[allow(unused_mut)]
                 #[deny(unsafe_code)]
                 fn call( $(mut $arg_ident: $arg_ty),* ) -> DbResult {
@@ -36,7 +36,7 @@ macro_rules! ffi_no_catch {
         $(
             #[allow(unsafe_code, unused_attributes)]
             #[no_mangle]
-            pub unsafe extern "C" fn $name( $($arg_ident : $arg_ty),* ) -> DbResult {
+            pub unsafe extern "cdecl" fn $name( $($arg_ident : $arg_ty),* ) -> DbResult {
                 #[allow(unused_mut)]
                 #[deny(unsafe_code)]
                 fn call( $(mut $arg_ident: $arg_ty),* ) -> DbResult {
