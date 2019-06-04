@@ -48,7 +48,7 @@ where
         HandleShared(Box::into_raw(v), PhantomData)
     }
 
-    pub(super) fn get(self) -> &'a T {
+    pub(super) fn get(&self) -> &T {
         unsafe_block!("We own the interior value" => { &*self.0 })
     }
 
@@ -93,7 +93,7 @@ where
         HandleExclusive(Box::into_raw(v), PhantomData)
     }
 
-    pub(super) fn get(self) -> &'a mut T {
+    pub(super) fn get(&mut self) -> &mut T {
         unsafe_block!("We own the interior value" => { &mut *(*self.0).get_raw() })
     }
 

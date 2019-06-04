@@ -1,5 +1,5 @@
 use std::{
-    cell::{Cell, UnsafeCell},
+    cell::UnsafeCell,
     collections::HashMap,
     marker::PhantomData,
     mem,
@@ -73,14 +73,14 @@ lazy_static! {
 A value that's bound to the thread it's created on.
 */
 pub struct ThreadBound<T: ?Sized> {
-    thread_id: Cell<ThreadId>,
+    thread_id: ThreadId,
     inner: UnsafeCell<T>,
 }
 
 impl<T> ThreadBound<T> {
     pub(super) fn new(inner: T) -> Self {
         ThreadBound {
-            thread_id: Cell::new(get_thread_id()),
+            thread_id: get_thread_id(),
             inner: UnsafeCell::new(inner),
         }
     }
@@ -101,7 +101,7 @@ impl<T: ?Sized> ThreadBound<T> {
     fn check(&self) {
         let current = get_thread_id();
 
-        if self.thread_id.get() != current {
+        if self.thread_id != current {
             panic!("attempted to access resource from a different thread");
         }
     }
