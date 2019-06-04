@@ -125,7 +125,7 @@ ffi! {
         store: DbStoreHandle,
         reader: Out<DbReaderHandle>
     ) -> DbResult {
-        let store = store.get();
+        let store = store.as_ref();
 
         let handle = DbReaderHandle::alloc(DbReader {
             inner: thread_bound::DeferredCleanup::new(store.inner.read_begin()?),
@@ -143,7 +143,7 @@ ffi! {
         value_buf_len: size_t,
         actual_value_len: Out<size_t>
     ) -> DbResult {
-        let reader = reader.get();
+        let reader = reader.as_mut();
 
         let buf = unsafe_block!("The buffer lives as long as `db_read_next`, the length is within the buffer and the buffer won't be read before initialization" => value_buf.as_uninit_bytes_mut(value_buf_len));
 
@@ -191,7 +191,7 @@ ffi! {
         store: DbStoreHandle,
         writer: Out<DbWriterHandle>
     ) -> DbResult {
-        let store = store.get();
+        let store = store.as_ref();
 
         let handle = DbWriterHandle::alloc(DbWriter {
             inner: store.inner.write_begin()?,
@@ -208,7 +208,7 @@ ffi! {
         value: Ref<u8>,
         value_len: size_t
     ) -> DbResult {
-        let writer = writer.get();
+        let writer = writer.as_mut();
 
         let key = unsafe_block!("The key pointer lives as long as `db_write_set` and points to valid data" => key.as_ref());
         let value_slice = unsafe_block!("The buffer lives as long as `db_write_set` and the length is within the buffer" => value.as_bytes(value_len));
@@ -235,7 +235,7 @@ ffi! {
         store: DbStoreHandle,
         deleter: Out<DbDeleterHandle>
     ) -> DbResult {
-        let store = store.get();
+        let store = store.as_ref();
 
         let handle = DbDeleterHandle::alloc(DbDeleter {
             inner: store.inner.delete_begin()?,
@@ -250,7 +250,7 @@ ffi! {
         deleter: DbDeleterHandle,
         key: Ref<DbKey>
     ) -> DbResult {
-        let deleter = deleter.get();
+        let deleter = deleter.as_mut();
         
         let key = unsafe_block!("The key pointer lives as long as `db_delete_remove` and points to valid data" => key.as_ref());
 
