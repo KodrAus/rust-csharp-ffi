@@ -8,10 +8,10 @@ use std::{
     marker::PhantomData,
 };
 
-use super::{
-    is_null::IsNull,
-    thread_bound::ThreadBound,
-};
+pub(crate) mod thread_bound;
+
+use self::thread_bound::ThreadBound;
+use super::is_null::IsNull;
 
 /*
 The handles here are wrappers for a shared `&T` and an exclusive `&mut T`.
@@ -65,9 +65,9 @@ A non-shared handle that cannot be accessed by multiple threads.
 The interior value can be treated like `&mut T`.
 
 The handle is bound to the thread that it was created on to ensure
-there's no possibility for data races. Note that this doesn't rule out
-the possibility of multiple live mutable aliases to the same handle, even
-though memory accesses themselves will be safe.
+there's no possibility for data races. Note that, if reverse PInvoke is supported
+then it's possible to mutably alias the handle from the same thread if the reverse
+call can re-enter the FFI using the same handle. This is technically undefined behaviour.
 
 The handle _can_ be deallocated from a different thread than the one that created it.
 

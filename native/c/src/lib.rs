@@ -33,7 +33,6 @@ mod handle;
 mod is_null;
 mod read;
 mod result;
-mod thread_bound;
 
 pub use self::{
     handle::*,

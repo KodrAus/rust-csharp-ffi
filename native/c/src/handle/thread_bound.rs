@@ -78,7 +78,7 @@ pub struct ThreadBound<T: ?Sized> {
 }
 
 impl<T> ThreadBound<T> {
-    pub fn new(inner: T) -> Self {
+    pub(super) fn new(inner: T) -> Self {
         ThreadBound {
             thread_id: Cell::new(get_thread_id()),
             inner: UnsafeCell::new(inner),
@@ -92,7 +92,7 @@ value so long as the inner value is itself `Send`. This allows
 the .NET runtime to potentially finalize a value on another thread.
 */
 impl<T: Send> ThreadBound<T> {
-    pub fn into_inner(self) -> T {
+    pub(super) fn into_inner(self) -> T {
         self.inner.into_inner()
     }
 }
@@ -115,7 +115,7 @@ impl<T: ?Sized> ThreadBound<T> {
 impl<T: ?Sized + UnwindSafe> UnwindSafe for ThreadBound<T> {}
 impl<T: ?Sized + RefUnwindSafe> RefUnwindSafe for ThreadBound<T> {}
 
-// NOTE: The `Send` impl for `ThreadBound` is still determined by `T`
+unsafe_impl!("The inner value is safe to send to another thread" => impl<T: ?Sized + Send> Send for ThreadBound<T> {});
 unsafe_impl!("The inner value can't actually be accessed concurrently" => impl<T: ?Sized> Sync for ThreadBound<T> {});
 
 /**
@@ -127,7 +127,7 @@ for cleanup instead of being moved onto the current thread.
 */
 // NOTE: We require `T: 'static` because the value may live as long
 // as the current thread
-pub(super) struct DeferredCleanup<T: 'static> {
+pub(crate) struct DeferredCleanup<T: 'static> {
     thread_id: ThreadId,
     value_id: ValueId,
     _m: PhantomData<*mut T>,
@@ -224,7 +224,7 @@ impl<T: 'static> DeferredCleanup<T> {
         })
     }
 
-    pub fn is_valid(&self) -> bool {
+    fn is_valid(&self) -> bool {
         let current_thread = get_thread_id();
         let has_value = unsafe_block!("There are no active mutable references" => {
             REGISTRY
