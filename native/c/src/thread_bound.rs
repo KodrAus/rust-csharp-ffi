@@ -1,5 +1,5 @@
 use std::{
-    cell::UnsafeCell,
+    cell::{Cell, UnsafeCell},
     collections::HashMap,
     marker::PhantomData,
     mem,
@@ -14,6 +14,7 @@ use std::{
         },
         Mutex,
     },
+    panic::{UnwindSafe, RefUnwindSafe},
 };
 
 type ThreadId = usize;
@@ -68,16 +69,19 @@ lazy_static! {
     static ref GARBAGE: Mutex<HashMap<ThreadId, Vec<ValueId>>> = Mutex::new(HashMap::new());
 }
 
+/**
+A value that's bound to the thread it's created on.
+*/
 pub struct ThreadBound<T: ?Sized> {
-    thread_id: ThreadId,
-    inner: T,
+    thread_id: Cell<ThreadId>,
+    inner: UnsafeCell<T>,
 }
 
 impl<T> ThreadBound<T> {
     pub fn new(inner: T) -> Self {
         ThreadBound {
-            thread_id: get_thread_id(),
-            inner,
+            thread_id: Cell::new(get_thread_id()),
+            inner: UnsafeCell::new(inner),
         }
     }
 }
@@ -89,7 +93,7 @@ the .NET runtime to potentially finalize a value on another thread.
 */
 impl<T: Send> ThreadBound<T> {
     pub fn into_inner(self) -> T {
-        self.inner
+        self.inner.into_inner()
     }
 }
 
@@ -97,31 +101,22 @@ impl<T: ?Sized> ThreadBound<T> {
     fn check(&self) {
         let current = get_thread_id();
 
-        if self.thread_id != current {
+        if self.thread_id.get() != current {
             panic!("attempted to access resource from a different thread");
         }
     }
+
+    pub(super) fn get_raw(&self) -> *mut T {
+        self.check();
+        self.inner.get()
+    }
 }
+
+impl<T: ?Sized + UnwindSafe> UnwindSafe for ThreadBound<T> {}
+impl<T: ?Sized + RefUnwindSafe> RefUnwindSafe for ThreadBound<T> {}
 
 // NOTE: The `Send` impl for `ThreadBound` is still determined by `T`
-
 unsafe_impl!("The inner value can't actually be accessed concurrently" => impl<T: ?Sized> Sync for ThreadBound<T> {});
-
-impl<T: ?Sized> Deref for ThreadBound<T> {
-    type Target = T;
-
-    fn deref(&self) -> &T {
-        self.check();
-        &self.inner
-    }
-}
-
-impl<T: ?Sized> DerefMut for ThreadBound<T> {
-    fn deref_mut(&mut self) -> &mut T {
-        self.check();
-        &mut self.inner
-    }
-}
 
 /**
 A thread-bound value that can be safely dropped from a different thread.
@@ -132,7 +127,7 @@ for cleanup instead of being moved onto the current thread.
 */
 // NOTE: We require `T: 'static` because the value may live as long
 // as the current thread
-pub struct DeferredCleanup<T: 'static> {
+pub(super) struct DeferredCleanup<T: 'static> {
     thread_id: ThreadId,
     value_id: ValueId,
     _m: PhantomData<*mut T>,
@@ -255,7 +250,6 @@ unsafe_impl!(
     "The inner value is pinned to the current thread and isn't actually sent. \
      Dropping from another thread will signal cleanup on the original" =>
     impl<T: 'static> Send for DeferredCleanup<T> {});
-unsafe_impl!("The inner value can't actually be accessed concurrently" => impl<T> Sync for DeferredCleanup<T> {});
 
 impl<T: 'static> Deref for DeferredCleanup<T> {
     type Target = T;
