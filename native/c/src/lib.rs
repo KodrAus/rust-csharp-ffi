@@ -48,28 +48,28 @@ pub struct DbStore {
     inner: store::Store,
 }
 
-pub type DbStoreHandle = HandleShared<DbStore>;
+pub type DbStoreHandle<'a> = HandleShared<'a, DbStore>;
 
 #[repr(C)]
 pub struct DbReader {
     inner: thread_bound::DeferredCleanup<store::reader::Reader>,
 }
 
-pub type DbReaderHandle = HandleExclusive<DbReader>;
+pub type DbReaderHandle<'a> = HandleExclusive<'a, DbReader>;
 
 #[repr(C)]
 pub struct DbWriter {
     inner: store::writer::Writer,
 }
 
-pub type DbWriterHandle = HandleExclusive<DbWriter>;
+pub type DbWriterHandle<'a> = HandleExclusive<'a, DbWriter>;
 
 #[repr(C)]
 pub struct DbDeleter {
     inner: store::deleter::Deleter,
 }
 
-pub type DbDeleterHandle = HandleExclusive<DbDeleter>;
+pub type DbDeleterHandle<'a> = HandleExclusive<'a, DbDeleter>;
 
 ffi_no_catch! {
     fn db_last_result(
@@ -126,6 +126,8 @@ ffi! {
         store: DbStoreHandle,
         reader: Out<DbReaderHandle>
     ) -> DbResult {
+        let store = store.get();
+
         let handle = DbReaderHandle::alloc(DbReader {
             inner: thread_bound::DeferredCleanup::new(store.inner.read_begin()?),
         });
@@ -142,6 +144,8 @@ ffi! {
         value_buf_len: size_t,
         actual_value_len: Out<size_t>
     ) -> DbResult {
+        let reader = reader.get();
+
         let buf = unsafe_block!("The buffer lives as long as `db_read_next`, the length is within the buffer and the buffer won't be read before initialization" => value_buf.as_uninit_bytes_mut(value_buf_len));
 
         'read_event: loop {
@@ -188,6 +192,8 @@ ffi! {
         store: DbStoreHandle,
         writer: Out<DbWriterHandle>
     ) -> DbResult {
+        let store = store.get();
+
         let handle = DbWriterHandle::alloc(DbWriter {
             inner: store.inner.write_begin()?,
         });
@@ -203,6 +209,8 @@ ffi! {
         value: Ref<u8>,
         value_len: size_t
     ) -> DbResult {
+        let writer = writer.get();
+
         let key = unsafe_block!("The key pointer lives as long as `db_write_set` and points to valid data" => key.as_ref());
         let value_slice = unsafe_block!("The buffer lives as long as `db_write_set` and the length is within the buffer" => value.as_bytes(value_len));
 
@@ -228,6 +236,8 @@ ffi! {
         store: DbStoreHandle,
         deleter: Out<DbDeleterHandle>
     ) -> DbResult {
+        let store = store.get();
+
         let handle = DbDeleterHandle::alloc(DbDeleter {
             inner: store.inner.delete_begin()?,
         });
@@ -241,6 +251,8 @@ ffi! {
         deleter: DbDeleterHandle,
         key: Ref<DbKey>
     ) -> DbResult {
+        let deleter = deleter.get();
+        
         let key = unsafe_block!("The key pointer lives as long as `db_delete_remove` and points to valid data" => key.as_ref());
 
         deleter.inner.remove(data::Key::from_bytes(key.0))?;

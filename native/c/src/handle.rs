@@ -1,8 +1,4 @@
 use std::{
-    ops::{
-        Deref,
-        DerefMut,
-    },
     panic::{
         RefUnwindSafe,
         UnwindSafe,
@@ -33,23 +29,27 @@ The interior value can be treated like `&T`.
 Consumers must ensure a handle is not used again after it has been deallocated.
 */
 #[repr(transparent)]
-pub struct HandleShared<T: ?Sized>(*const T);
+pub struct HandleShared<'a, T: ?Sized>(*const T, PhantomData<&'a T>);
 
-unsafe_impl!("The handle is semantically `&T`" => impl<T: ?Sized> Send for HandleShared<T> where for<'a> &'a T: Send {});
-unsafe_impl!("The handle is semantically `&T`" => impl<T: ?Sized> Sync for HandleShared<T> where for<'a> &'a T: Sync {});
+unsafe_impl!("The handle is semantically `&T`" => impl<'a, T: ?Sized> Send for HandleShared<'a, T> where &'a T: Send {});
+unsafe_impl!("The handle is semantically `&T`" => impl<'a, T: ?Sized> Sync for HandleShared<'a, T> where &'a T: Sync {});
 
-impl<T: ?Sized + RefUnwindSafe> UnwindSafe for HandleShared<T> {}
+impl<'a, T: ?Sized + RefUnwindSafe> UnwindSafe for HandleShared<'a, T> {}
 
-impl<T> HandleShared<T>
+impl<'a, T> HandleShared<'a, T>
 where
-    HandleShared<T>: Send + Sync,
+    HandleShared<'a, T>: Send + Sync,
 {
     pub(super) fn alloc(value: T) -> Self
     where
         T: 'static,
     {
         let v = Box::new(value);
-        HandleShared(Box::into_raw(v))
+        HandleShared(Box::into_raw(v), PhantomData)
+    }
+
+    pub(super) fn get(self) -> &'a T {
+        unsafe_block!("We own the interior value" => { &*self.0 })
     }
 
     unsafe_fn!("There are no other live references and the handle won't be used again" =>
@@ -57,23 +57,6 @@ where
             let v = Box::from_raw(handle.0 as *mut T);
             f(*v)
         });
-}
-
-/*
-We require thread-safety bounds on `Deref` even though they're
-not _technically_ needed here (the `alloc` method protects us)
-so we can catch ourselves using data in the handles that doesn't
-satisfy their safety requirements
-*/
-impl<T: ?Sized> Deref for HandleShared<T>
-where
-    HandleShared<T>: Send + Sync,
-{
-    type Target = T;
-
-    fn deref(&self) -> &T {
-        unsafe_block!("We own the interior value" => { &*self.0 })
-    }
 }
 
 /**
@@ -91,23 +74,27 @@ The handle _can_ be deallocated from a different thread than the one that create
 Consumers must ensure a handle is not used again after it has been deallocated.
 */
 #[repr(transparent)]
-pub struct HandleExclusive<T: ?Sized>(*mut ThreadBound<T>);
+pub struct HandleExclusive<'a, T: ?Sized>(*mut ThreadBound<T>, PhantomData<&'a mut T>);
 
-unsafe_impl!("The handle is semantically `&mut T`" => impl<T: ?Sized> Send for HandleExclusive<T> where for<'a> &'a mut T: Send {});
-unsafe_impl!("The handle uses `ThreadBound` for synchronization" => impl<T: ?Sized> Sync for HandleExclusive<T> where ThreadBound<T>: Sync {});
+unsafe_impl!("The handle is semantically `&mut T`" => impl<'a, T: ?Sized> Send for HandleExclusive<'a, T> where &'a mut T: Send {});
+unsafe_impl!("The handle uses `ThreadBound` for synchronization" => impl<'a, T: ?Sized> Sync for HandleExclusive<'a, T> where ThreadBound<T>: Sync {});
 
-impl<T: ?Sized + RefUnwindSafe> UnwindSafe for HandleExclusive<T> {}
+impl<'a, T: ?Sized + RefUnwindSafe> UnwindSafe for HandleExclusive<'a, T> {}
 
-impl<T> HandleExclusive<T>
+impl<'a, T> HandleExclusive<'a, T>
 where
-    HandleExclusive<T>: Send + Sync,
+    HandleExclusive<'a, T>: Send + Sync,
 {
     pub(super) fn alloc(value: T) -> Self
     where
         T: 'static,
     {
         let v = Box::new(ThreadBound::new(value));
-        HandleExclusive(Box::into_raw(v))
+        HandleExclusive(Box::into_raw(v), PhantomData)
+    }
+
+    pub(super) fn get(self) -> &'a mut T {
+        unsafe_block!("We own the interior value" => { &mut *(*self.0).get_raw() })
     }
 
     unsafe_fn!("There are no other live references and the handle won't be used again" =>
@@ -118,38 +105,6 @@ where
             let v = Box::from_raw(handle.0);
             f(v.into_inner())
         });
-}
-
-/*
-We require thread-safety bounds on `Deref` even though they're
-not _technically_ needed here (the `alloc` method protects us)
-so we can catch ourselves using data in the handles that doesn't
-satisfy their safety requirements
-*/
-impl<T: ?Sized> Deref for HandleExclusive<T>
-where
-    HandleExclusive<T>: Send + Sync,
-{
-    type Target = T;
-
-    fn deref(&self) -> &T {
-        unsafe_block!("We own the interior value" => { &**self.0 })
-    }
-}
-
-/*
-We require thread-safety bounds on `Deref` even though they're
-not _technically_ needed here (the `alloc` method protects us)
-so we can catch ourselves using data in the handles that doesn't
-satisfy their safety requirements
-*/
-impl<T: ?Sized> DerefMut for HandleExclusive<T>
-where
-    HandleExclusive<T>: Send,
-{
-    fn deref_mut(&mut self) -> &mut T {
-        unsafe_block!("We own the interior value" => { &mut **self.0 })
-    }
 }
 
 /**
@@ -225,13 +180,13 @@ impl<'a> Out<'a, u8> {
     });
 }
 
-impl<T: ?Sized> IsNull for HandleExclusive<T> {
+impl<'a, T: ?Sized> IsNull for HandleExclusive<'a, T> {
     fn is_null(&self) -> bool {
         self.0.is_null()
     }
 }
 
-impl<T: ?Sized + Sync> IsNull for HandleShared<T> {
+impl<'a, T: ?Sized + Sync> IsNull for HandleShared<'a, T> {
     fn is_null(&self) -> bool {
         self.0.is_null()
     }
