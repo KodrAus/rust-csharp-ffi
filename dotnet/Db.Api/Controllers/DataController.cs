@@ -37,7 +37,7 @@ namespace Db.Api.Controllers
                 foreach (var outerData in reader.Data())
                 {
                     using var data = outerData;
-                    data.WriteAsValue(writer);
+                    data.WriteValue(writer);
                 }
 
                 writer.WriteEndArray();

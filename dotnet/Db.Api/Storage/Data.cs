@@ -45,12 +45,12 @@ namespace Db.Api.Storage
             _ownedValueMemory?.Dispose();
         }
 
-        public void WriteAsValue(Utf8JsonWriter writer)
+        public void WriteValue(Utf8JsonWriter writer)
         {
             writer.WriteStartObject();
 
             writer.WriteString(_keyPropertyName, Key.ToString());
-            Value.WriteAsProperty(_valuePropertyName, writer);
+            Value.WriteProperty(_valuePropertyName, writer);
 
             writer.WriteEndObject();
         }
