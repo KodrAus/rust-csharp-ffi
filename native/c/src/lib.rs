@@ -251,7 +251,7 @@ ffi! {
         key: Ref<DbKey>
     ) -> DbResult {
         let deleter = deleter.as_mut();
-        
+
         let key = unsafe_block!("The key pointer lives as long as `db_delete_remove` and points to valid data" => key.as_ref());
 
         deleter.inner.remove(data::Key::from_bytes(key.0))?;

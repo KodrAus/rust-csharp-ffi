@@ -1,11 +1,11 @@
 use std::{
+    marker::PhantomData,
     panic::{
         RefUnwindSafe,
         UnwindSafe,
     },
     ptr,
     slice,
-    marker::PhantomData,
 };
 
 pub(crate) mod thread_bound;
