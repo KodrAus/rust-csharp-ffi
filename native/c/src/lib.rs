@@ -89,7 +89,7 @@ ffi_no_catch! {
                     return DbResult::buffer_too_small();
                 }
 
-                unsafe_block!("The buffer is valid for writes and the length is within the buffer" => message_buf.init_slice(error.as_bytes()));
+                unsafe_block!("The buffer is valid for writes and the length is within the buffer" => message_buf.init_bytes(error.as_bytes()));
             } else {
                 unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => actual_message_len.init(0));
             }
