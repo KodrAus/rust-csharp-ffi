@@ -168,13 +168,13 @@ impl<'a, T> Out<'a, T> {
     unsafe_fn!("The pointer must be nonnull and valid for writes" => pub fn init(&mut self, value: T) {
         ptr::write(self.0, value);
     });
-
-    unsafe_fn!("The pointer must be nonnull, not overlap the slice, must be valid for the length of the slice, and valid for writes" => pub fn init_slice(&mut self, value: &[T]) {
-        ptr::copy_nonoverlapping(value.as_ptr(), self.0, value.len());
-    });
 }
 
 impl<'a> Out<'a, u8> {
+    unsafe_fn!("The pointer must be nonnull, not overlap the slice, must be valid for the length of the slice, and valid for writes" => pub fn init_bytes(&mut self, value: &[u8]) {
+        ptr::copy_nonoverlapping(value.as_ptr(), self.0, value.len());
+    });
+
     unsafe_fn!("The slice must never be read from and must be valid for the length of the slice" => pub fn as_uninit_bytes_mut(&mut self, len: usize) -> &mut [u8] {
         slice::from_raw_parts_mut(self.0, len)
     });
