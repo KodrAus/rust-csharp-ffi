@@ -7,6 +7,10 @@ use std::{
         Deref,
         DerefMut,
     },
+    panic::{
+        RefUnwindSafe,
+        UnwindSafe,
+    },
     sync::{
         atomic::{
             AtomicUsize,
@@ -14,7 +18,6 @@ use std::{
         },
         Mutex,
     },
-    panic::{UnwindSafe, RefUnwindSafe},
 };
 
 type ThreadId = usize;
@@ -45,7 +48,7 @@ fn next_value_id() -> usize {
     })
 }
 
-struct Registry(HashMap<ValueId, (UnsafeCell<*mut ()>, Box<Fn(&UnsafeCell<*mut ()>)>)>);
+struct Registry(HashMap<ValueId, (UnsafeCell<*mut ()>, Box<dyn Fn(&UnsafeCell<*mut ()>)>)>);
 
 impl Drop for Registry {
     fn drop(&mut self) {
@@ -268,11 +271,11 @@ impl<T: 'static> DerefMut for DeferredCleanup<T> {
 #[cfg(test)]
 mod tests {
     use std::{
-        thread,
         sync::{
             Arc,
-            Mutex
+            Mutex,
         },
+        thread,
     };
 
     use super::*;
@@ -300,9 +303,11 @@ mod tests {
 
                 // Move the deferred into another thread
                 // This will signal that it needs to be dropped
-                thread::spawn(move || { drop(deferred); })
-                    .join()
-                    .expect("failed to run inner thread");
+                thread::spawn(move || {
+                    drop(deferred);
+                })
+                .join()
+                .expect("failed to run inner thread");
 
                 // Ensure the value hasn't been dropped yet
                 {
@@ -316,7 +321,9 @@ mod tests {
                 };
 
                 (pre_clean_len, thread_id)
-            }).join().expect("failed to run thread")
+            })
+            .join()
+            .expect("failed to run thread")
         };
 
         // Ensure the garbage has been cleaned
