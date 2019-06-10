@@ -1,6 +1,6 @@
+#if DEBUG
 using System;
 using Db.Storage.Native;
-#if DEBUG
 using Xunit;
 
 namespace Db.Tests.Storage

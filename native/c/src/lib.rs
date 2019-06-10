@@ -83,13 +83,15 @@ ffi_no_catch! {
             unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => result.init(value));
 
             if let Some(error) = error {
+                let error = error.as_bytes();
+
                 unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => actual_message_len.init(error.len()));
 
                 if message_buf_len < error.len() {
                     return DbResult::buffer_too_small();
                 }
 
-                unsafe_block!("The buffer is valid for writes and the length is within the buffer" => message_buf.init_bytes(error.as_bytes()));
+                unsafe_block!("The buffer is valid for writes and the length is within the buffer" => message_buf.init_bytes(error));
             } else {
                 unsafe_block!("The out pointer is valid and not mutably aliased elsewhere" => actual_message_len.init(0));
             }
