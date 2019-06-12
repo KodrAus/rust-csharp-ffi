@@ -76,8 +76,8 @@ Consumers must ensure a handle is not used again after it has been deallocated.
 #[repr(transparent)]
 pub struct HandleExclusive<'a, T: ?Sized>(*mut ThreadBound<T>, PhantomData<&'a mut T>);
 
-unsafe_impl!("The handle is semantically `&mut T`" => impl<'a, T: ?Sized> Send for HandleExclusive<'a, T> where &'a mut T: Send {});
-unsafe_impl!("The handle uses `ThreadBound` for synchronization" => impl<'a, T: ?Sized> Sync for HandleExclusive<'a, T> where ThreadBound<T>: Sync {});
+unsafe_impl!("The handle is semantically `&mut T`" => impl<'a, T: ?Sized> Send for HandleExclusive<'a, T> where &'a mut ThreadBound<T>: Send {});
+unsafe_impl!("The handle uses `ThreadBound` for synchronization" => impl<'a, T: ?Sized> Sync for HandleExclusive<'a, T> where &'a mut ThreadBound<T>: Sync {});
 
 impl<'a, T: ?Sized + RefUnwindSafe> UnwindSafe for HandleExclusive<'a, T> {}
 
