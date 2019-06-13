@@ -4,6 +4,14 @@ This repository contains an example Rust + C# hybrid application, based on [this
 
 It can be run as a typical .NET application, or it can be compiled ahead of time into a single native binary for [CoreRT](https://github.com/dotnet/corert).
 
+## Contents
+
+- [Getting started](#getting-started)
+- [Building](#building)
+- [Debugging](#debugging)
+- [Project structure](#project-structure)
+- [Notes](#notes)
+
 ## Getting started
 
 ### Using VS Code + Docker
