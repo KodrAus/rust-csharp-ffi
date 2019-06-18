@@ -14,7 +14,7 @@ jobs:
   - task: UseDotNet@2
     inputs:
       packageType: sdk
-      version: 3.x
+      version: 3.0.100-preview5-011568
       includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
   - task: NodeTool@0
@@ -36,7 +36,7 @@ jobs:
   - task: UseDotNet@2
     inputs:
       packageType: sdk
-      version: 3.x
+      version: 3.0.100-preview5-011568
       includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
   - task: NodeTool@0
@@ -60,7 +60,7 @@ jobs:
   - task: UseDotNet@2
     inputs:
       packageType: sdk
-      version: 3.x
+      version: 3.0.100-preview5-011568
       includePreviewVersions: true
       installationPath: $(Agent.ToolsDirectory)/dotnet
   - task: NodeTool@0
