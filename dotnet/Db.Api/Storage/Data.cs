@@ -50,7 +50,9 @@ namespace Db.Api.Storage
             writer.WriteStartObject();
 
             writer.WriteString(_keyPropertyName, Key.ToString());
-            Value.WriteAsProperty(_valuePropertyName, writer);
+
+            writer.WritePropertyName(_valuePropertyName);
+            Value.WriteTo(writer);
 
             writer.WriteEndObject();
         }
