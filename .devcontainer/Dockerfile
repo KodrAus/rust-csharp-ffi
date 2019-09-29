@@ -38,7 +38,7 @@ RUN npm install -g @angular/cli
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly-2019-05-22
 RUN rustup component add rls rust-analysis rust-src
 
-RUN curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin -Version 3.0.100-preview8-013656
+RUN curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin -Version 3.0.100
 
 RUN apt-get autoremove -y \
     && apt-get clean -y \
